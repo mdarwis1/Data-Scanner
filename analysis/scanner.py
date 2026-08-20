@@ -12,3 +12,12 @@ def get_dimensions(df):
         'columns': columns,
     }
 
+def get_mean(df):
+    mean = df.mean()
+
+    return mean
+
+def get_median(df):
+    median = df.median()
+
+    return median
