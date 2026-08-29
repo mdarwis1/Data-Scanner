@@ -71,6 +71,4 @@ print(get_standard_dev(df))
 print(get_unique_values(df))
 print(get_frequencies(df))
 
-print("Rows:", len(df))
-print("Unique names:", df["Name"].nunique())
-print("Uniqueness:", df["Name"].nunique() / len(df))
+

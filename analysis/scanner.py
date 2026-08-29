@@ -38,11 +38,12 @@ def get_missing(df):
 
 def get_duplicates(df):
     duplicate_count = int(df.duplicated().sum())
+    duplicate_rows = f"Duplicate Rows: {duplicate_count}"
     total_rows = len(df)
     duplicate_percent_calc = (duplicate_count/total_rows) * 100
     duplicate_percent = f"{duplicate_percent_calc:.2f}%"
 
-    return duplicate_count, duplicate_percent
+    return duplicate_rows, duplicate_percent
 
 
 print(df)
