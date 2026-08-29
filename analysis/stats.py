@@ -1,9 +1,6 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv('test_data/scanner_test_dataset.csv')
-
-
 def get_mean(df):
     mean = df.mean(numeric_only = True)
 
@@ -54,8 +51,8 @@ def get_frequencies(df):
 
         uniqueness_ratio = unique_values / total_values
 
-        # fully unique column is 1, if column greater than 90% unique don't count frequencies for it (Ex. name, date, time, etc.)
-        if uniqueness_ratio > 0.9:
+        # fully unique column is 1, if column is 85% unique or higher don't count frequencies for it (Ex. name, date, time, etc.)
+        if uniqueness_ratio >= 0.85:
             continue
 
         frequencies[column] = df[column].value_counts()

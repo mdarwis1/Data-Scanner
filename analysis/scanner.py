@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import stats
 
-df = pd.read_csv('test_data/scanner_test_dataset.csv')
+df = pd.read_csv('test_data/scanner_test_dataset_2.csv')
 
 # Getting rows/columns of dataset
 def get_dimensions(df):
