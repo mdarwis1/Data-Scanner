@@ -44,6 +44,7 @@ def get_duplicates(df):
 
     return duplicate_count, duplicate_percent
 
+
 print(df)
 print(get_dimensions(df))
 print(column_info(df))
