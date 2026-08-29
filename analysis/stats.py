@@ -62,13 +62,28 @@ def get_frequencies(df):
 
     return frequencies
 
+def stat_overview(df):
+    stats = pd.DataFrame({
+        "Mean": get_mean(df),
+        "Median": get_median(df),
+        "Min": get_min(df),
+        "Max": get_max(df),
+        "Standard Deviation": get_standard_dev(df)
+    })
 
-print(get_mean(df))
-print(get_median(df))
-print(get_min(df))
-print(get_max(df))
-print(get_standard_dev(df))
-print(get_unique_values(df))
-print(get_frequencies(df))
+    print("\nNumerical Statistics:")
+    print(stats)
 
+    print("\nUnique values:")
 
+    unique_values = get_unique_values(df)
+
+    for column, count in unique_values.items():
+        print(f"{column}: {count} unique values")
+
+    print("\nCategorical Frequencies:")
+
+    frequencies = get_frequencies(df)
+
+    for column, counts in frequencies.items():
+        print(f"\n{column}:\n{counts.to_string(header=False)}")
