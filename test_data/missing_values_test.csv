@@ -1,0 +1,13 @@
+ID,Name,Age,Score,Hours_Studied,Grade,Subject
+1,Alice,17,95,10,A,Math
+2,Bob,16,,8,B,Science
+3,Charlie,,88,12,A,English
+4,,17,76,9,C,History
+5,Eva,18,92,,A,Math
+6,Frank,16,85,7,B,
+7,Grace,17,,11,A,Science
+8,Henry,18,90,10,B,English
+9,Ivy,,82,8,,History
+10,Jack,17,87,9,A,Math
+11,Kate,16,94,,A,Science
+12,Leo,18,89,10,B,English

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import scanner
 
 
 df = pd.read_csv('test_data/outliers_test.csv')
@@ -31,4 +32,16 @@ def get_outliers(df):
 
     return total_outliers
 
+def missing_values_analysis(df):
+    total_missing = {}
+
+    for column in df:
+        missing_count = df[column].isna().sum()
+
+        if missing_count > 0:
+            total_missing[column] = missing_count
+
+    return total_missing
+
 print(get_outliers(df))
+print(missing_values_analysis(df))
