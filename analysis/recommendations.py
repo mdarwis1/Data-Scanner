@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/missing_values_test.csv')
+df = pd.read_csv('test_data/outlier_rec_test.csv')
 
 ## Outlier Detection
 
@@ -34,6 +34,25 @@ def get_outliers(df):
 def outlier_recommendations(df):
     outliers = get_outliers(df)
 
+    outlier_recs = {}
+
+    for column in outliers:
+
+        outlier_count = len(outliers[column])
+
+        if outlier_count == 1:
+            recommendation = "1 potential outlier detected. Review it and consider removing or changing it."
+
+        else:
+            recommendation = "Multiple potential outliers detected. Review them and consider removing or changing them."
+
+        outlier_recs[column] = {
+            'outlier_count': outlier_count,
+            'outlier_values': outliers[column],
+            'recommendation': recommendation
+        }
+
+        return outlier_recs
     
 
 def analyze_distribution(df):
@@ -55,6 +74,10 @@ def analyze_distribution(df):
 def missing_value_recommendations(df):
     total_missing = {}
 
+    distribution = analyze_distribution(df)
+
+    outliers = get_outliers(df)
+
     for column in df:
         missing_count = df[column].isna().sum()
 
@@ -62,9 +85,22 @@ def missing_value_recommendations(df):
         if missing_count > 0:
             if pd.api.types.is_numeric_dtype(df[column]):
 
+                # mean good for evenly distributed skew w no outliers
+                # median good for skewed data
+                skewness = distribution[column]['skewness']
+
+                # if outliers, use median
+                if column in outliers:
+                    recommendation = "Fill with median"
+                elif abs(skewness) <= 0.5:
+                    recommendation = "Fill with mean"
+                else:
+                    recommendation = "Fill with median"
+
                 total_missing[column] = {
                     "missing_count": int(missing_count),
-                    "type": "numerical"
+                    "type": "numerical",
+                    "recommendation": recommendation
                 }
             else:
                 total_missing[column] = {
@@ -73,18 +109,8 @@ def missing_value_recommendations(df):
                     'recommendation': "Fill with 'Unknown'"
                 }
 
-            distribution = analyze_distribution(df)
-
-            for column, info in distribution.items():
-                skewness = info['skewness']
-
-                if abs(skewness) <= 0.5:
-                    recommendation = "mean"
-                else:
-                    recommendation = "median"
-
 
     return total_missing
 
-print(get_outliers(df))
-print(missing_value_recommendations(df))
+# print(missing_value_recommendations(df))
+print(outlier_recommendations(df))
