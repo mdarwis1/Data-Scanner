@@ -52,7 +52,7 @@ def outlier_recommendations(df):
             'recommendation': recommendation
         }
 
-        return outlier_recs
+    return outlier_recs
     
 
 def analyze_distribution(df):
