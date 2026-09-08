@@ -1,0 +1,7 @@
+Name,Age,Score,Hours_Studied,ID,Grade,Notes
+Alice,16,92.5,2,101,A,Good
+Bob,17,88.0,3,102,B,
+Charlie,18,95.0,4,103,A,Excellent
+Diana,16,missing,2.5,104,B,5
+Ethan,unknown,87.5,5,105,A,
+Fiona,17,91.0,3,106,C,Good

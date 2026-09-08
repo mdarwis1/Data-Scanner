@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/outlier_rec_test.csv')
+df = pd.read_csv('test_data/mixed_dtypes_test.csv')
 
 ## Outlier Detection
 
@@ -109,8 +109,63 @@ def missing_value_recommendations(df):
                     'recommendation': "Fill with 'Unknown'"
                 }
 
-
     return total_missing
 
+def analyze_mixed_dtypes(df):
+
+    mixed_dtypes = {}
+
+    for column in df.columns:
+
+        # stores values of each numeric/string value
+        numeric_values = []
+        non_numeric_values = []
+
+        # loop through every cell in every column
+        for value in df[column]:
+
+            # skip missing/null values, don't affect dtype analysis
+            if pd.isna(value):
+                continue
+
+            # if value can be converted to number, store it as numeric
+            try:
+                float(value)
+                numeric_values.append(value)
+            # if doesn't work, store it as string
+            except:
+                non_numeric_values.append(value)
+
+        # total up counts for each dtype
+        numeric_count = len(numeric_values)
+        non_numeric_count = len(non_numeric_values)
+
+        # storing which is majority vs minority dtype, for determining which value is considered "weird" in the column
+     
+        # only report if contains both dtypes
+        if numeric_count > 0 and non_numeric_count > 0:
+
+            if numeric_count > non_numeric_count:
+                mixed_dtypes[column] = {
+                    "majority_type": "numeric",
+                    "minority_values": non_numeric_values
+                }
+
+            elif non_numeric_count > numeric_count:
+                mixed_dtypes[column] = {
+                    "majority_type": "string",
+                    "minority_values": numeric_values
+                }
+
+            else:
+                mixed_dtypes[column] = {
+                    "majority_type": "mixed",
+                    "minority_values": numeric_values + non_numeric_values
+                }
+
+    return mixed_dtypes
+
 # print(missing_value_recommendations(df))
-print(outlier_recommendations(df))
+# print(outlier_recommendations(df))
+
+print(analyze_mixed_dtypes(df))
