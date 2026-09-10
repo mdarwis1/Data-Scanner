@@ -165,7 +165,18 @@ def analyze_mixed_dtypes(df):
 
     return mixed_dtypes
 
+def formatting_recommendations(df):
+    formatting_issues ={}
+
+    for column in df:
+        issues = []
+
+        #for value in df[column].dropna():
+
+    return formatting_issues
+
 # print(missing_value_recommendations(df))
 # print(outlier_recommendations(df))
 
-print(analyze_mixed_dtypes(df))
+#print(analyze_mixed_dtypes(df))
+print(formatting_recommendations(df))
