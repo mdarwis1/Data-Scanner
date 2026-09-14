@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/whitespace_test.csv')
+df = pd.read_csv('test_data/capitalization_test.csv')
 
 ## Outlier Detection
 
@@ -165,8 +165,8 @@ def analyze_mixed_dtypes(df):
 
     return mixed_dtypes
 
-def formatting_recommendations(df):
-    formatting_issues ={}
+def whitespace_detection(df):
+    white_space = {}
 
     for column in df:
         issues = []
@@ -178,12 +178,43 @@ def formatting_recommendations(df):
                     issues.append(value)
 
         if issues:
-            formatting_issues[column] = issues
+            white_space[column] = issues
 
-    return formatting_issues
+    return white_space
+
+def capitalization_detection(df):
+    capitalization = {}
+
+    for column in df:
+        # only get unique values, not duplicates
+        values = df[column].dropna().unique()
+
+        # using groups to organize values that are same when capitalization ignored
+        groups = {}
+
+        for value in values:
+            # compare values without capitalization to see if they're the same word
+            if isinstance(value, str):
+                lowercase_value = value.lower()
+
+                if lowercase_value not in groups:
+                    groups[lowercase_value] = []
+
+                # associates the lowercase grouping word with all the variations present in dataset
+                groups[lowercase_value].append(value)
+
+        # loops through the variations within each group
+        for key, variants in groups.items():
+            # if more than 1 variant, capitalization error
+            if len(variants) > 1:
+                capitalization[column] = variants
+
+    return capitalization
 
 # print(missing_value_recommendations(df))
 # print(outlier_recommendations(df))
 
 #print(analyze_mixed_dtypes(df))
-print(formatting_recommendations(df))
+# print(whitespace_detection(df))
+print(capitalization_detection(df))
+print(df["City"].unique())

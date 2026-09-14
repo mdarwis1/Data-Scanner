@@ -1,0 +1,13 @@
+ID,Name,City,Grade,Subject
+1,Alice,Chicago,A,Math
+2,Bob,chicago,B,Science
+3,Charlie,CHICAGO,A,Math
+4,Diana,Naperville,B,English
+5,Ethan,NAPERVILLE,A,Science
+6,Fiona,Schaumburg,C,Math
+7,George,schaumburg,B,English
+8,Hannah,Chicago,A,SCIENCE
+9,Ian,Naperville,C,science
+10,Julia,NaPerVILLe,A,Math
+11,Kevin,Chicago,B,Math
+12,Liam,Schaumburg,A,English
