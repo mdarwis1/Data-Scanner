@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/mixed_dtypes_test.csv')
+df = pd.read_csv('test_data/whitespace_test.csv')
 
 ## Outlier Detection
 
@@ -171,7 +171,14 @@ def formatting_recommendations(df):
     for column in df:
         issues = []
 
-        #for value in df[column].dropna():
+        for value in df[column]:
+            if isinstance(value, str):
+                new_value = value.strip()
+                if len(new_value) != len(value):
+                    issues.append(value)
+
+        if issues:
+            formatting_issues[column] = issues
 
     return formatting_issues
 
