@@ -207,7 +207,10 @@ def capitalization_detection(df):
         for key, variants in groups.items():
             # if more than 1 variant, capitalization error
             if len(variants) > 1:
-                capitalization[column] = variants
+                if column not in capitalization:
+                    capitalization[column] = []
+
+                capitalization[column].append(variants)
 
     return capitalization
 
@@ -217,4 +220,3 @@ def capitalization_detection(df):
 #print(analyze_mixed_dtypes(df))
 # print(whitespace_detection(df))
 print(capitalization_detection(df))
-print(df["City"].unique())
