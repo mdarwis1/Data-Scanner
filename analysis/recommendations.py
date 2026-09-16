@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/capitalization_test.csv')
+df = pd.read_csv('test_data/duplicates_test.csv')
 
 ## Outlier Detection
 
@@ -214,9 +214,50 @@ def capitalization_detection(df):
 
     return capitalization
 
+def duplicate_recommendations(df):
+
+    # ID makes every row unique, detects ID column and ignores it
+    id_columns = []
+
+    for column in df.columns:
+        if "id" in column.lower():
+            id_columns.append(column)
+
+    data = df.drop(columns=id_columns)
+
+    # sums up the booleans returned from .duplicated()
+    duplicate_count = int(data.duplicated().sum())
+    
+    duplicate_percent = (duplicate_count / len(df)) * 100
+
+    # no duplicates
+    if duplicate_count == 0:
+        recommendation = "No duplicate rows detected."
+
+    # duplicates exist, but make up only small portion of data
+    elif duplicate_percent < 10:
+        recommendation = (
+            "Potential duplicate rows detected. Review them and consider removing copies."
+        )
+    else:
+        recommendation = (
+            "A significant portion of the dataset contains duplicate rows. "
+            "Review them to determine whether they are intentional before removing them."
+        )
+  
+    return {
+        "duplicate_count": duplicate_count,
+        "duplicate_percentage": duplicate_percent,
+        "recommendation": recommendation
+    }
+
+
+
 # print(missing_value_recommendations(df))
 # print(outlier_recommendations(df))
 
 #print(analyze_mixed_dtypes(df))
 # print(whitespace_detection(df))
-print(capitalization_detection(df))
+#print(capitalization_detection(df))
+
+print(duplicate_recommendations(df))
