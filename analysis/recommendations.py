@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/duplicates_test.csv')
+df = pd.read_csv('test_data/formatting_test.csv')
 
 ## Outlier Detection
 
@@ -214,6 +214,28 @@ def capitalization_detection(df):
 
     return capitalization
 
+def formatting_recommendations(df):
+    recommendations = {}
+
+    whitespace = whitespace_detection(df)
+    capitalization = capitalization_detection(df)
+
+    for column in df:
+        issues = []
+
+        if column in whitespace:
+            issues.append(whitespace[column])
+            issues.append("Remove leadering or trailing whitespace.")
+
+        if column in capitalization:
+            issues.append(capitalization[column])
+            issues.append("Standardize capitalization.")
+
+        if issues:
+            recommendations[column] = issues
+
+    return recommendations
+
 def duplicate_recommendations(df):
 
     # ID makes every row unique, detects ID column and ignores it
@@ -260,4 +282,5 @@ def duplicate_recommendations(df):
 # print(whitespace_detection(df))
 #print(capitalization_detection(df))
 
-print(duplicate_recommendations(df))
+#print(duplicate_recommendations(df))
+print(formatting_recommendations(df))
