@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/formatting_test.csv')
+df = pd.read_csv('test_data/mixed_dtypes_test.csv')
 
 ## Outlier Detection
 
 # calculating IQR for outlier cutoffs
-def get_outliers(df):
+def outlier_detection(df):
     numeric_columns = df.select_dtypes(include="number").columns
 
     # dictionary to associate column w outliers
@@ -32,7 +32,7 @@ def get_outliers(df):
     return total_outliers
 
 def outlier_recommendations(df):
-    outliers = get_outliers(df)
+    outliers = outlier_detection(df)
 
     outlier_recs = {}
 
@@ -76,7 +76,7 @@ def missing_value_recommendations(df):
 
     distribution = analyze_distribution(df)
 
-    outliers = get_outliers(df)
+    outliers = outlier_detection(df)
 
     for column in df:
         missing_count = df[column].isna().sum()
@@ -111,7 +111,7 @@ def missing_value_recommendations(df):
 
     return total_missing
 
-def analyze_mixed_dtypes(df):
+def mixed_dtypes_detection(df):
 
     mixed_dtypes = {}
 
@@ -122,7 +122,7 @@ def analyze_mixed_dtypes(df):
         non_numeric_values = []
 
         # loop through every cell in every column
-        for value in df[column]:
+        for index, value in df[column].items():
 
             # skip missing/null values, don't affect dtype analysis
             if pd.isna(value):
@@ -131,10 +131,18 @@ def analyze_mixed_dtypes(df):
             # if value can be converted to number, store it as numeric
             try:
                 float(value)
-                numeric_values.append(value)
+                numeric_values.append({
+                    "row": index + 2,
+                    "value": value,
+                    "type": "numeric"
+                })
             # if doesn't work, store it as string
             except:
-                non_numeric_values.append(value)
+                non_numeric_values.append({
+                    "row": index + 2,
+                    "value": value,
+                    "type": "string"
+                })
 
         # total up counts for each dtype
         numeric_count = len(numeric_values)
@@ -146,24 +154,58 @@ def analyze_mixed_dtypes(df):
         if numeric_count > 0 and non_numeric_count > 0:
 
             if numeric_count > non_numeric_count:
-                mixed_dtypes[column] = {
-                    "majority_type": "numeric",
-                    "minority_values": non_numeric_values
-                }
+                majority_type = "numeric"
+                inconsistent_cells = non_numeric_values
 
             elif non_numeric_count > numeric_count:
-                mixed_dtypes[column] = {
-                    "majority_type": "string",
-                    "minority_values": numeric_values
-                }
+                majority_type = "string"
+                inconsistent_cells = numeric_values
 
             else:
-                mixed_dtypes[column] = {
-                    "majority_type": "mixed",
-                    "minority_values": numeric_values + non_numeric_values
-                }
+                majority_type = "mixed"
+                inconsistent_cells = numeric_values + non_numeric_values
+
+            mixed_dtypes[column] = {
+                "types_present": ["numeric", "string"],
+                "majority_type": majority_type,
+                "inconsistent_cells": inconsistent_cells
+            }
 
     return mixed_dtypes
+
+def mixed_dtypes_recommendations(df):
+
+    recommendations = {}
+
+    mixed_dtypes = mixed_dtypes_detection(df)
+
+    for column, info in mixed_dtypes.items():
+
+        recommendations[column] = []
+
+        if info["majority_type"] == "numeric":
+            recommendations[column].append(
+                "Convert inconsistent values to missing values"
+            )
+            recommendations[column].append(
+                "Remove rows containing inconsistent values"
+            )
+            recommendations[column].append(
+                "Replace inconsistent values with a value of your choice"
+            )
+
+        elif info["majority_type"] == "string":
+            recommendations[column].append(
+                "Convert inconsistent values to strings"
+            )
+            recommendations[column].append(
+                "Remove rows containing inconsistent values"
+            )
+            recommendations[column].append(
+                "Replace inconsistent values with a value of your choice"
+            )
+            
+    return recommendations
 
 def whitespace_detection(df):
     white_space = {}
@@ -229,7 +271,7 @@ def formatting_recommendations(df):
 
         if column in capitalization:
             issues.append(capitalization[column])
-            issues.append("Standardize capitalization.")
+            issues.append("Inconsistent capitalizatoin. Consider standardizing capitalization.")
 
         if issues:
             recommendations[column] = issues
@@ -256,14 +298,10 @@ def duplicate_recommendations(df):
     if duplicate_count == 0:
         recommendation = "No duplicate rows detected."
 
-    # duplicates exist, but make up only small portion of data
-    elif duplicate_percent < 10:
-        recommendation = (
-            "Potential duplicate rows detected. Review them and consider removing copies."
-        )
     else:
         recommendation = (
-            "A significant portion of the dataset contains duplicate rows. "
+            f"The dataset contains {duplicate_count} duplicate rows "
+            f"({duplicate_percent:.2f}% of all rows). "
             "Review them to determine whether they are intentional before removing them."
         )
   
@@ -275,12 +313,12 @@ def duplicate_recommendations(df):
 
 
 
-# print(missing_value_recommendations(df))
-# print(outlier_recommendations(df))
+#print(missing_value_recommendations(df))
+#print(outlier_recommendations(df))
 
-#print(analyze_mixed_dtypes(df))
-# print(whitespace_detection(df))
+print(mixed_dtypes_recommendations(df))
+#print(whitespace_detection(df))
 #print(capitalization_detection(df))
 
 #print(duplicate_recommendations(df))
-print(formatting_recommendations(df))
+#print(formatting_recommendations(df))
