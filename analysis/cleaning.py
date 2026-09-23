@@ -19,6 +19,15 @@ def fill_missing_known(df, column):
 # convert mixed datatypes
 
 # fix formatting
+def remove_whitespace(df, column):
+    df[column] = df[column].str.strip()
+    return df
+
+def standardize_capitalization(df, column, replacements):
+    for old_value, new_value in replacements.items():
+        df[column] = df[column].replace(old_value, new_value)
+
+    return df
 
 # remove duplicates
 
