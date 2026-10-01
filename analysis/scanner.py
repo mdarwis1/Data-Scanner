@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import stats
+from . import stats
 
 df = pd.read_csv('test_data/scanner_overview_test_2.csv')
 
@@ -45,34 +45,43 @@ def get_duplicates(df):
     return duplicate_count, duplicate_percent
 
 def data_overview(df):
-    dimensions = get_dimensions(df)
+        dimensions = get_dimensions(df)
+    
+        missing_count, missing_percent = get_missing(df)
+    
+        duplicate_count, duplicate_percent = get_duplicates(df)
+    
+        return {
+            "dimensions": dimensions,
+            "column_info": column_info(df),
+            "missing_count": missing_count,
+            "missing_percent": missing_percent,
+            "duplicate_count": duplicate_count,
+            "duplicate_percent": duplicate_percent
+        }
 
-    missing_count, missing_percent = get_missing(df)
+#     print("Dataset Overview:")
 
-    duplicate_count, duplicate_percent = get_duplicates(df)
+#     print(f"\nRows: {dimensions['rows']}")
+#     print(f"Columns: {dimensions['columns']}")
 
-    print("Dataset Overview:")
+#     print("\nColumn Info:")
 
-    print(f"\nRows: {dimensions['rows']}")
-    print(f"Columns: {dimensions['columns']}")
+#     print(column_info(df))
 
-    print("\nColumn Info:")
+#     print("\nMissing Data:")
+#     print(f"Missing Values: {missing_count}")
 
-    print(column_info(df))
+#     print(f"Missing Percentage: {missing_percent}")
 
-    print("\nMissing Data:")
-    print(f"Missing Values: {missing_count}")
+#     print("\nDuplicates:")
+#     print(f"Duplicate Rows: {duplicate_count}")
+#     print(f"Duplicate Percentage: {duplicate_percent}")
 
-    print(f"Missing Percentage: {missing_percent}")
-
-    print("\nDuplicates:")
-    print(f"Duplicate Rows: {duplicate_count}")
-    print(f"Duplicate Percentage: {duplicate_percent}")
-
-    stats.stat_overview(df)
+#     stats.stat_overview(df)
 
 
-data_overview(df)
+# data_overview(df)
 
 
 

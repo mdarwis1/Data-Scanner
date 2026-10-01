@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import recommendations
+from . import recommendations
 
 df = pd.read_csv('test_data/scanner_overview_test_2.csv')
 

@@ -60,27 +60,36 @@ def get_frequencies(df):
     return frequencies
 
 def stat_overview(df):
-    stats = pd.DataFrame({
-        "Mean": get_mean(df),
-        "Median": get_median(df),
-        "Min": get_min(df),
-        "Max": get_max(df),
-        "Standard Deviation": get_standard_dev(df)
-    })
+        stats = pd.DataFrame({
+           "Mean": get_mean(df),
+           "Median": get_median(df),
+           "Min": get_min(df),
+           "Max": get_max(df),
+           "Standard Deviation": get_standard_dev(df)
+       })
+   
+        unique_values = get_unique_values(df)
+   
+        frequencies = get_frequencies(df)
+   
+        return {
+           "numerical_stats": stats,
+           "unique_values": unique_values,
+           "frequencies": frequencies
+       }
+    # print("\nNumerical Statistics:")
+    # print(stats)
 
-    print("\nNumerical Statistics:")
-    print(stats)
+    # print("\nUnique values:")
 
-    print("\nUnique values:")
+    # unique_values = get_unique_values(df)
 
-    unique_values = get_unique_values(df)
+    # for column, count in unique_values.items():
+    #     print(f"{column}: {count} unique values")
 
-    for column, count in unique_values.items():
-        print(f"{column}: {count} unique values")
+    # print("\nCategorical Frequencies:")
 
-    print("\nCategorical Frequencies:")
+    # frequencies = get_frequencies(df)
 
-    frequencies = get_frequencies(df)
-
-    for column, counts in frequencies.items():
-        print(f"\n{column}:\n{counts.to_string(header=False)}")
+    # for column, counts in frequencies.items():
+    #     print(f"\n{column}:\n{counts.to_string(header=False)}")

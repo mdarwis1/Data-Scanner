@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_csv('test_data/mixed_dtypes_test.csv')
-
 ## Outlier Detection
 
 # calculating IQR for outlier cutoffs
@@ -267,11 +265,11 @@ def formatting_recommendations(df):
 
         if column in whitespace:
             issues.append(whitespace[column])
-            issues.append("Remove leadering or trailing whitespace.")
+            issues.append("Remove leading or trailing whitespace.")
 
         if column in capitalization:
             issues.append(capitalization[column])
-            issues.append("Inconsistent capitalizatoin. Consider standardizing capitalization.")
+            issues.append("Inconsistent capitalization. Consider standardizing capitalization.")
 
         if issues:
             recommendations[column] = issues
@@ -290,9 +288,13 @@ def duplicate_recommendations(df):
     data = df.drop(columns=id_columns)
 
     # sums up the booleans returned from .duplicated()
+    duplicate_mask = data.duplicated(keep=False)
     duplicate_count = int(data.duplicated().sum())
     
     duplicate_percent = (duplicate_count / len(df)) * 100
+
+
+    duplicate_rows = df[duplicate_mask]
 
     # no duplicates
     if duplicate_count == 0:
@@ -307,7 +309,8 @@ def duplicate_recommendations(df):
   
     return {
         "duplicate_count": duplicate_count,
-        "duplicate_percentage": duplicate_percent,
+        "duplicate_percentage": duplicate_percent,        "duplicate_rows": duplicate_rows,
+        "duplicate_rows": duplicate_rows,
         "recommendation": recommendation
     }
 
@@ -316,7 +319,7 @@ def duplicate_recommendations(df):
 #print(missing_value_recommendations(df))
 #print(outlier_recommendations(df))
 
-print(mixed_dtypes_recommendations(df))
+# print(mixed_dtypes_recommendations(df))
 #print(whitespace_detection(df))
 #print(capitalization_detection(df))
 
