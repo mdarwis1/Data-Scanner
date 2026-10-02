@@ -5,21 +5,22 @@ from analysis import scanner
 from analysis import stats
 from analysis import recommendations
 from analysis import cleaning
+from visualizations import charts
 
 st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
 
-df = pd.read_csv("test_data/scanner_all_tests.csv")
+df = pd.read_csv("test_data/visualizations_test.csv")
 
 if "df" not in st.session_state:
     st.session_state.df = None
 
-tab1, tab2, tab3 = st.tabs(
-    ["Overview", "Problems", "Recommendations"]
+overview_tab, problems_tab, visuals_tab = st.tabs(
+    ["Overview", "Problems", "Visualizations"]
 )
 
-with tab1:
+with overview_tab:
 
     st.header("Dataset Overview")
 
@@ -65,7 +66,7 @@ with tab1:
         st.write(f"**{column}**")
         st.dataframe(counts)
 
-with tab2:
+with problems_tab:
     st.header("Problems Detected")
 
     # missing values
@@ -179,6 +180,95 @@ with tab2:
         st.subheader("Duplicate Rows")
         st.write("No duplicate rows detected.")
 
-with tab3:
-    st.header("Recommendations")
-    # cleaning recommendations and buttons
+with visuals_tab:
+    st.header("Visualizations")
+
+    plot_type = st.selectbox(
+        "Choose a visualization",
+        [
+            "Histogram",
+            "Scatterplot",
+            "Bar Graph",
+            "Box Plot",
+            "Line Graph",
+            "Correlation Heatmap"
+        ]
+    )
+
+    if plot_type == "Histogram":
+
+        column = st.selectbox(
+            "Choose a numeric column",
+            df.select_dtypes(include="number").columns
+        )
+
+        fig = charts.histogram(df, column)
+
+        st.pyplot(fig)
+
+    if plot_type == "Scatterplot":
+
+        numeric_columns = df.select_dtypes(include="number").columns
+
+        x_column = st.selectbox(
+            "Choose the X-axis",
+            numeric_columns
+        )
+
+        y_column = st.selectbox(
+            "Choose the Y-axis",
+            numeric_columns
+        )
+
+        fig = charts.scatterplot(df, x_column, y_column)
+
+        st.pyplot(fig)
+
+    if plot_type == "Bar Graph":
+        categorical_columns = df.select_dtypes(exclude = "number").columns
+
+        column = st.selectbox(
+            "Choose a categorical column",
+            categorical_columns
+        )
+
+        fig = charts.bar_graph(df, column)
+
+        st.pyplot(fig)
+
+    if plot_type == "Box Plot":
+
+        numeric_columns = df.select_dtypes(include="number").columns
+
+        column = st.selectbox(
+            "Choose a numeric column",
+            numeric_columns
+        )
+
+        fig = charts.box_plot(df, column)
+
+        st.pyplot(fig)
+
+    if plot_type == "Line Graph":
+
+        x_column = st.selectbox(
+            "Choose the X-axis",
+            df.columns
+        )
+
+        numeric_columns = df.select_dtypes(include="number").columns
+
+        y_column = st.selectbox(
+            "Choose the Y-axis",
+            numeric_columns
+        )
+
+        fig = charts.line_plot(df, x_column, y_column)
+
+        st.pyplot(fig)
+
+    if plot_type == "Correlation Heatmap":
+
+        fig = charts.correlation_heatmap(df)
+
+        st.pyplot(fig)
