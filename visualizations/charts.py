@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 def histogram(df, column):
     fig, ax = plt.subplots()
@@ -57,20 +56,76 @@ def line_plot(df, x_column, y_column):
 
     return fig
 
+def recommend_visuals(df):
 
-def correlation_heatmap(df):
+    recommendations = []
 
-    fig, ax = plt.subplots()
+    # get numeric columns
+    numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
 
-    data = df.drop(
-        columns=[column for column in df.columns if "id" in column.lower()],
-        errors="ignore"
-    )
+    # get categorical columns
+    categorical_columns = df.select_dtypes(
+        include=["object", "category"]
+    ).columns.tolist()
 
-    correlation = data.select_dtypes(include="number").corr()
+    # using nested loop to compare each numeric column with column after that
+    for i in range(len(numeric_columns)):
+        for j in range(i + 1, len(numeric_columns)):
 
-    sns.heatmap(correlation, annot=True, ax=ax)
+            x = numeric_columns[i]
+            y = numeric_columns[j]
 
-    ax.set_title("Correlation Between Numeric Columns")
+            # skip ID columns
+            if "id" in x.lower() or "id" in y.lower():
+                continue
 
-    return fig
+            # calculate correlation to determine strength of relationship
+            correlation = df[x].corr(df[y])
+
+            if pd.isna(correlation):
+                continue
+
+            # storing strength of relationship
+            strength = abs(correlation)
+
+            # only recommend meaningful/strong relationships
+            if strength >= 0.6:
+                recommendations.append({
+                    "type": "scatter",
+                    "x": x,
+                    "y": y,
+                    "correlation": round(correlation, 2),
+                    "reason": "High correlation indicates a strong relationship."
+                })
+
+            elif strength >= 0.4:
+                recommendations.append({
+                    "type": "scatter",
+                    "x": x,
+                    "y": y,
+                    "correlation": round(correlation, 2),
+                    "reason": "Moderate correlation indicates a moderate relationship."
+                })
+
+    # categorical vs numeric
+    for categorical in categorical_columns:
+
+        # don't graph columns with tons of categories
+        if df[categorical].nunique() > 10:
+            continue
+
+        for numeric in numeric_columns:
+
+            # Don't use IDs
+            if "id" in numeric.lower():
+                continue
+
+            recommendations.append({
+                "type": "bar",
+                "x": categorical,
+                "y": numeric,
+                "reason": f"Bar graphs are good for comparing categorical groups. Compare {numeric} across {categorical}"
+            })
+
+    return recommendations
+

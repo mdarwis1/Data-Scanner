@@ -191,7 +191,6 @@ with visuals_tab:
             "Bar Graph",
             "Box Plot",
             "Line Graph",
-            "Correlation Heatmap"
         ]
     )
 
@@ -264,11 +263,5 @@ with visuals_tab:
         )
 
         fig = charts.line_plot(df, x_column, y_column)
-
-        st.pyplot(fig)
-
-    if plot_type == "Correlation Heatmap":
-
-        fig = charts.correlation_heatmap(df)
 
         st.pyplot(fig)
