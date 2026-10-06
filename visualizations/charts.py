@@ -68,6 +68,32 @@ def recommend_visuals(df):
         include=["object", "category"]
     ).columns.tolist()
 
+    # numeric columns --> histogram
+    for numeric in numeric_columns:
+
+        # skip ID columns
+        if "id" in numeric.lower():
+            continue
+
+        recommendations.append({
+            "type": "histogram",
+            "column": numeric,
+            "reason": f"A histogram shows the distribution of {numeric}."
+        })
+
+    # numeric columns --> box plot
+    for numeric in numeric_columns:
+
+        # skip ID columns
+        if "id" in numeric.lower():
+            continue
+
+        recommendations.append({
+            "type": "box",
+            "column": numeric,
+            "reason": f"A box plot shows the spread of {numeric} and can highlight potential outliers."
+        })
+
     # using nested loop to compare each numeric column with column after that
     for i in range(len(numeric_columns)):
         for j in range(i + 1, len(numeric_columns)):
@@ -91,21 +117,27 @@ def recommend_visuals(df):
             # only recommend meaningful/strong relationships
             if strength >= 0.6:
                 recommendations.append({
-                    "type": "scatter",
-                    "x": x,
-                    "y": y,
-                    "correlation": round(correlation, 2),
-                    "reason": "High correlation indicates a strong relationship."
-                })
+                "type": "scatter",
+                "x": x,
+                "y": y,
+                "correlation": round(correlation, 2),
+                "reason": (
+                    f"{x} and {y} have a strong correlation "
+                    f"(r = {round(correlation, 2)})."
+                )
+            })
 
             elif strength >= 0.4:
                 recommendations.append({
-                    "type": "scatter",
-                    "x": x,
-                    "y": y,
-                    "correlation": round(correlation, 2),
-                    "reason": "Moderate correlation indicates a moderate relationship."
-                })
+                "type": "scatter",
+                "x": x,
+                "y": y,
+                "correlation": round(correlation, 2),
+                "reason": (
+                    f"{x} and {y} have a moderate correlation "
+                    f"(r = {round(correlation, 2)})."
+                )
+            })
 
     # categorical vs numeric
     for categorical in categorical_columns:

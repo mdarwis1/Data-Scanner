@@ -183,6 +183,59 @@ with problems_tab:
 with visuals_tab:
     st.header("Visualizations")
 
+    st.subheader("Recommended Visualizations")
+
+    visual_recommendations = charts.recommend_visuals(df)
+
+    if visual_recommendations:
+        for recommendation in visual_recommendations:
+
+            if recommendation["type"] == "scatter":
+                st.write(
+                    f"**Scatter Plot: "
+                    f"{recommendation['x']} vs {recommendation['y']}**"
+                )
+
+                st.write(recommendation["reason"])
+
+                if "correlation" in recommendation:
+                    st.write(
+                        f"Correlation: "
+                        f"{recommendation['correlation']}"
+                    )
+
+            elif recommendation["type"] == "histogram":
+                st.write(
+                    f"**Histogram: "
+                    f"{recommendation['column']}**"
+                )
+
+                st.write(recommendation["reason"])
+
+            elif recommendation["type"] == "box":
+                st.write(
+                    f"**Box Plot: "
+                    f"{recommendation['column']}**"
+                )
+
+                st.write(recommendation["reason"])
+
+            elif recommendation["type"] == "bar":
+                st.write(
+                    f"**Bar Graph: "
+                    f"{recommendation['x']} vs "
+                    f"{recommendation['y']}**"
+                )
+
+                st.write(recommendation["reason"])
+
+    else:
+        st.write("No specific visualizations were recommended.")
+
+    st.divider()
+
+    st.subheader("Create Your Own Visualization")
+
     plot_type = st.selectbox(
         "Choose a visualization",
         [
@@ -193,75 +246,3 @@ with visuals_tab:
             "Line Graph",
         ]
     )
-
-    if plot_type == "Histogram":
-
-        column = st.selectbox(
-            "Choose a numeric column",
-            df.select_dtypes(include="number").columns
-        )
-
-        fig = charts.histogram(df, column)
-
-        st.pyplot(fig)
-
-    if plot_type == "Scatterplot":
-
-        numeric_columns = df.select_dtypes(include="number").columns
-
-        x_column = st.selectbox(
-            "Choose the X-axis",
-            numeric_columns
-        )
-
-        y_column = st.selectbox(
-            "Choose the Y-axis",
-            numeric_columns
-        )
-
-        fig = charts.scatterplot(df, x_column, y_column)
-
-        st.pyplot(fig)
-
-    if plot_type == "Bar Graph":
-        categorical_columns = df.select_dtypes(exclude = "number").columns
-
-        column = st.selectbox(
-            "Choose a categorical column",
-            categorical_columns
-        )
-
-        fig = charts.bar_graph(df, column)
-
-        st.pyplot(fig)
-
-    if plot_type == "Box Plot":
-
-        numeric_columns = df.select_dtypes(include="number").columns
-
-        column = st.selectbox(
-            "Choose a numeric column",
-            numeric_columns
-        )
-
-        fig = charts.box_plot(df, column)
-
-        st.pyplot(fig)
-
-    if plot_type == "Line Graph":
-
-        x_column = st.selectbox(
-            "Choose the X-axis",
-            df.columns
-        )
-
-        numeric_columns = df.select_dtypes(include="number").columns
-
-        y_column = st.selectbox(
-            "Choose the Y-axis",
-            numeric_columns
-        )
-
-        fig = charts.line_plot(df, x_column, y_column)
-
-        st.pyplot(fig)
