@@ -12,7 +12,7 @@ st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
 
-df = pd.read_csv("test_data/visualizations_test.csv")
+df = pd.read_csv("data/bedtime_screentime_sleep_debt.csv")
 
 if "df" not in st.session_state:
     st.session_state.df = None
@@ -189,32 +189,16 @@ with visuals_tab:
         "visualizations that may help you understand your data."
     )
 
-
-    # -----------------------------------------------------
-    # GET RECOMMENDATIONS
-    # -----------------------------------------------------
-
     recommendations_list = charts.recommend_visuals(df)
 
-
-    # -----------------------------------------------------
-    # GROUP BY GRAPH TYPE
-    # -----------------------------------------------------
-
+    # group by graph type
     graph_groups = {
-
         "Scatterplot": [],
-
         "Histogram": [],
-
         "Box Plot": [],
-
         "Bar Graph": [],
-
         "Line Graph": []
-
     }
-
 
     for recommendation in recommendations_list:
 
@@ -226,25 +210,20 @@ with visuals_tab:
                 recommendation
             )
 
-
-    # -----------------------------------------------------
-    # SHOW GRAPH GROUPS
-    # -----------------------------------------------------
-
+    # show graph groups
     for graph_type, group in graph_groups.items():
 
-        # Don't display empty graph categories
+        # don't display empty graph categories
         if not group:
             continue
 
 
-        # Graph type dropdown
+        # graph type dropdown
         with st.expander(
             f"{graph_type} ({len(group)})"
         ):
-
-
-            # Loop through recommendations
+            
+            # loop through recommendations
             for i, recommendation in enumerate(group):
 
                 columns = recommendation["columns"]
@@ -253,54 +232,35 @@ with visuals_tab:
 
                 priority = recommendation["priority"]
 
-
-                # -------------------------
-                # COLUMN NAME
-                # -------------------------
-
+                # column name
                 st.subheader(
                     " vs ".join(columns)
                     if len(columns) > 1
                     else columns[0]
                 )
 
-
-                # -------------------------
-                # PRIORITY
-                # -------------------------
-
+               # priority ranking system
                 if priority == 3:
 
                     st.write(
                         "⭐ **High Priority**"
                     )
-
                 elif priority == 2:
 
                     st.write(
                         "**Recommended**"
                     )
-
                 else:
-
                     st.write(
                         "**Optional**"
                     )
 
-
-                # -------------------------
-                # REASON
-                # -------------------------
-
+                # reasoning/explanation
                 st.write(
                     f"**Why:** {reason}"
                 )
 
-
-                # -------------------------
-                # CORRELATION
-                # -------------------------
-
+                # correlation
                 if "correlation" in recommendation:
 
                     st.write(
@@ -308,28 +268,18 @@ with visuals_tab:
                         f"{recommendation['correlation']}"
                     )
 
-
-                # -------------------------
-                # USE BUTTON
-                # -------------------------
-
+               # button in each
                 if st.button(
                     f"Use {graph_type}",
                     key=f"{graph_type}_{i}"
                 ):
-
                     st.session_state.selected_visual = (
                         recommendation
                     )
 
-
                 st.divider()
 
-
-    # =====================================================
-    # DISPLAY SELECTED RECOMMENDATION
-    # =====================================================
-
+    # display recommendations
     if "selected_visual" in st.session_state:
 
         selected = st.session_state.selected_visual
@@ -338,44 +288,29 @@ with visuals_tab:
 
         st.header("Selected Visualization")
 
-
         graph_type = selected["type"]
 
         columns = selected["columns"]
 
-
-        # -------------------------
-        # HISTOGRAM
-        # -------------------------
-
+       # histogram
         if graph_type == "Histogram":
 
             fig = charts.histogram(
                 df,
                 columns[0]
             )
-
             st.pyplot(fig)
 
-
-        # -------------------------
-        # BOX PLOT
-        # -------------------------
-
+       # box plot
         elif graph_type == "Box Plot":
 
             fig = charts.box_plot(
                 df,
                 columns[0]
             )
-
             st.pyplot(fig)
 
-
-        # -------------------------
-        # SCATTERPLOT
-        # -------------------------
-
+        # scatterplot
         elif graph_type == "Scatterplot":
 
             fig = charts.scatterplot(
@@ -383,28 +318,18 @@ with visuals_tab:
                 columns[0],
                 columns[1]
             )
-
             st.pyplot(fig)
 
-
-        # -------------------------
-        # BAR GRAPH
-        # -------------------------
-
+        # bar graph
         elif graph_type == "Bar Graph":
 
             fig = charts.bar_graph(
                 df,
                 columns[0]
             )
-
             st.pyplot(fig)
 
-
-        # -------------------------
-        # LINE GRAPH
-        # -------------------------
-
+        # line graph
         elif graph_type == "Line Graph":
 
             fig = charts.line_plot(
@@ -412,39 +337,24 @@ with visuals_tab:
                 columns[0],
                 columns[1]
             )
-
             st.pyplot(fig)
 
-
-    # =====================================================
-    # MANUAL VISUALIZATION
-    # =====================================================
-
+    # for MANUALLY creating graphs
     st.divider()
-
     st.header("Choose Your Own Visualization")
-
     st.write(
         "Want to explore something Data Scanner did not "
         "recommend? Choose a graph and columns yourself."
     )
 
-
-    # -----------------------------------------------------
-    # GET COLUMNS
-    # -----------------------------------------------------
-
+    # get columns
     numeric_columns = df.select_dtypes(
         include=np.number
     ).columns.tolist()
 
     all_columns = df.columns.tolist()
 
-
-    # -----------------------------------------------------
-    # GRAPH TYPE
-    # -----------------------------------------------------
-
+    # graph types
     manual_graph_type = st.selectbox(
         "Visualization type",
 
@@ -459,11 +369,6 @@ with visuals_tab:
         key="manual_graph_type"
     )
 
-
-    # =====================================================
-    # MANUAL HISTOGRAM
-    # =====================================================
-
     if manual_graph_type == "Histogram":
 
         column = st.selectbox(
@@ -474,7 +379,6 @@ with visuals_tab:
             key="manual_histogram_column"
         )
 
-
         if st.button(
             "Create Histogram",
             key="create_histogram"
@@ -484,13 +388,7 @@ with visuals_tab:
                 df,
                 column
             )
-
             st.pyplot(fig)
-
-
-    # =====================================================
-    # MANUAL BOX PLOT
-    # =====================================================
 
     elif manual_graph_type == "Box Plot":
 
@@ -502,7 +400,6 @@ with visuals_tab:
             key="manual_box_column"
         )
 
-
         if st.button(
             "Create Box Plot",
             key="create_box"
@@ -512,13 +409,7 @@ with visuals_tab:
                 df,
                 column
             )
-
             st.pyplot(fig)
-
-
-    # =====================================================
-    # MANUAL BAR GRAPH
-    # =====================================================
 
     elif manual_graph_type == "Bar Graph":
 
@@ -530,7 +421,6 @@ with visuals_tab:
             key="manual_bar_column"
         )
 
-
         if st.button(
             "Create Bar Graph",
             key="create_bar"
@@ -540,13 +430,7 @@ with visuals_tab:
                 df,
                 column
             )
-
             st.pyplot(fig)
-
-
-    # =====================================================
-    # MANUAL SCATTERPLOT
-    # =====================================================
 
     elif manual_graph_type == "Scatterplot":
 
@@ -558,7 +442,6 @@ with visuals_tab:
             key="manual_scatter_x"
         )
 
-
         y_column = st.selectbox(
             "Y-axis",
 
@@ -566,7 +449,6 @@ with visuals_tab:
 
             key="manual_scatter_y"
         )
-
 
         if st.button(
             "Create Scatterplot",
@@ -578,13 +460,7 @@ with visuals_tab:
                 x_column,
                 y_column
             )
-
             st.pyplot(fig)
-
-
-    # =====================================================
-    # MANUAL LINE GRAPH
-    # =====================================================
 
     elif manual_graph_type == "Line Graph":
 
@@ -596,7 +472,6 @@ with visuals_tab:
             key="manual_line_x"
         )
 
-
         y_column = st.selectbox(
             "Y-axis",
 
@@ -604,7 +479,6 @@ with visuals_tab:
 
             key="manual_line_y"
         )
-
 
         if st.button(
             "Create Line Graph",
@@ -616,5 +490,4 @@ with visuals_tab:
                 x_column,
                 y_column
             )
-
             st.pyplot(fig)
