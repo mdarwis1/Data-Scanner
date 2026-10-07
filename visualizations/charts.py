@@ -69,29 +69,37 @@ def recommend_visuals(df):
     ).columns.tolist()
 
     # numeric columns --> histogram
-    for numeric in numeric_columns:
+    for column in numeric_columns:
 
         # skip ID columns
-        if "id" in numeric.lower():
+        if "id" in column.lower():
             continue
 
         recommendations.append({
-            "type": "histogram",
-            "column": numeric,
-            "reason": f"A histogram shows the distribution of {numeric}."
+            "type": "Histogram",
+            "columns": [column],
+            "priority": 1,
+            "reason": (
+                f"Shows the distribution of {column}, "
+                "including where values are concentrated."
+            )
         })
 
     # numeric columns --> box plot
-    for numeric in numeric_columns:
+    for column in numeric_columns:
 
         # skip ID columns
-        if "id" in numeric.lower():
+        if "id" in column.lower():
             continue
 
         recommendations.append({
-            "type": "box",
-            "column": numeric,
-            "reason": f"A box plot shows the spread of {numeric} and can highlight potential outliers."
+            "type": "Box Plot",
+            "columns": [column],
+            "priority": 1,
+            "reason": (
+                f"Shows the spread of {column} "
+                "and can help identify potential outliers."
+            )
         })
 
     # using nested loop to compare each numeric column with column after that
@@ -117,27 +125,29 @@ def recommend_visuals(df):
             # only recommend meaningful/strong relationships
             if strength >= 0.6:
                 recommendations.append({
-                "type": "scatter",
-                "x": x,
-                "y": y,
-                "correlation": round(correlation, 2),
-                "reason": (
-                    f"{x} and {y} have a strong correlation "
-                    f"(r = {round(correlation, 2)})."
-                )
-            })
+                    "type": "Scatterplot",
+                    "columns": [x, y],
+                    "correlation": round(correlation, 2),
+                    "priority": 3,
+                    "reason": (
+                        f"{x} and {y} have a strong "
+                        f"correlation ({correlation:.2f}), "
+                        "so a scatterplot can show their relationship."
+                    )
+                })
 
             elif strength >= 0.4:
                 recommendations.append({
-                "type": "scatter",
-                "x": x,
-                "y": y,
-                "correlation": round(correlation, 2),
-                "reason": (
-                    f"{x} and {y} have a moderate correlation "
-                    f"(r = {round(correlation, 2)})."
-                )
-            })
+                    "type": "Scatterplot",
+                    "columns": [x, y],
+                    "correlation": round(correlation, 2),
+                    "priority": 2,
+                    "reason": (
+                        f"{x} and {y} have a moderate "
+                        f"correlation ({correlation:.2f}), "
+                        "so a scatterplot may reveal a relationship."
+                    )
+                })
 
     # categorical vs numeric
     for categorical in categorical_columns:
@@ -146,18 +156,71 @@ def recommend_visuals(df):
         if df[categorical].nunique() > 10:
             continue
 
-        for numeric in numeric_columns:
+        recommendations.append({
+            "type": "Bar Graph",
+            "columns": [categorical],
+            "priority": 2,
+            "reason": (
+                f"Shows how frequently each category "
+                f"appears in {categorical}."
+            )
+        })
 
-            # Don't use IDs
-            if "id" in numeric.lower():
+    # list of words that suggest column has meaningful order
+    ordered_words = [
+        "date",
+        "time",
+        "year",
+        "month",
+        "day",
+        "age",
+        "hour",
+        "hours",
+        "distance",
+        "temperature",
+        "speed"
+    ]
+
+    ordered_columns = []
+
+    for column in df.columns:
+
+        column_name = column.lower()
+
+        if any(word in column_name for word in ordered_words):
+            ordered_columns.append(column)
+
+    for x in ordered_columns:
+
+        for y in numeric_columns:
+
+            # if same column SKIP
+            if x == y:
+                continue
+
+            # skip ID values
+            if "id" in x.lower():
                 continue
 
             recommendations.append({
-                "type": "bar",
-                "x": categorical,
-                "y": numeric,
-                "reason": f"Bar graphs are good for comparing categorical groups. Compare {numeric} across {categorical}"
+                "type": "Line Graph",
+                "columns": [x, y],
+                "priority": 1,
+                "reason": (
+                    f"{x} appears to have a meaningful order, "
+                    f"so a line graph can show how {y} changes "
+                    f"as {x} changes."
+                )
             })
+            
+    # priority recommendation system
+    recommendations.sort(
+
+        # lambda creates tiny temp function 
+        key=lambda x: x["priority"],
+        reverse=True
+    )
 
     return recommendations
+
 
