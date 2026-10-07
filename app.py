@@ -14,11 +14,23 @@ st.write("Upload a CSV to get started!")
 
 df = pd.read_csv("data/bedtime_screentime_sleep_debt.csv")
 
+# states holding versions of dataset
+if "original_df" not in st.session_state:
+    st.session_state.original_df = df.copy()
+
+if "current_df" not in st.session_state:
+    st.session_state.current_df = df.copy()
+
+if "edit_history" not in st.session_state:
+    st.session_state.edit_history = []
+
+# checks if already df variable in session
 if "df" not in st.session_state:
     st.session_state.df = None
 
+# streamlit tabs
 overview_tab, problems_tab, visuals_tab = st.tabs(
-    ["Overview", "Problems", "Visualizations"]
+    ["Overview", "Problems", "Visualizations", "Cleaned Dataset"]
 )
 
 with overview_tab:
@@ -86,7 +98,7 @@ with problems_tab:
                 st.write("Affected rows:")
                 st.dataframe(
                     df[df[column].isna()],
-                    use_container_width=True
+                    width='stretch'
                 )
 
    
@@ -113,7 +125,7 @@ with problems_tab:
 
                 st.dataframe(
                     pd.DataFrame(info["inconsistent_cells"]),
-                    use_container_width=True
+                    width='stretch'
                 )
 
    # outliers
@@ -138,7 +150,7 @@ with problems_tab:
                     pd.DataFrame({
                         "Value": info["outlier_values"]
                     }),
-                    use_container_width=True
+                    width='stretch'
                 )
 
     # formatting
@@ -174,7 +186,7 @@ with problems_tab:
 
         st.dataframe(
             duplicates["duplicate_rows"],
-            use_container_width=True
+            width='stretch'
         )
 
     else:
