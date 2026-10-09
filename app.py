@@ -12,7 +12,7 @@ st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
 
-df = pd.read_csv("data/bedtime_screentime_sleep_debt.csv")
+df = pd.read_csv("test_data/scanner_overview_test_2.csv")
 
 # states holding versions of dataset
 if "original_df" not in st.session_state:
@@ -24,12 +24,23 @@ if "current_df" not in st.session_state:
 if "edit_history" not in st.session_state:
     st.session_state.edit_history = []
 
-# checks if already df variable in session
-if "df" not in st.session_state:
-    st.session_state.df = None
+# always use current dataset to analyze
+df = st.session_state.current_df
+
+# adds edit change to history of edits list
+def record_edit(action, column=None, method=None,
+                cells_changed=0, rows_removed=0):
+
+    st.session_state.edit_history.append({
+        "Action": action,
+        "Column": column if column is not None else "—",
+        "Method": method if method is not None else "—",
+        "Cells Changed": cells_changed,
+        "Rows Removed": rows_removed
+    })
 
 # streamlit tabs
-overview_tab, problems_tab, visuals_tab = st.tabs(
+overview_tab, problems_tab, visuals_tab, cleaned_tab = st.tabs(
     ["Overview", "Problems", "Visualizations", "Cleaned Dataset"]
 )
 
@@ -37,9 +48,12 @@ with overview_tab:
 
     st.header("Dataset Overview")
 
-    # Basic overview
-    overview = scanner.data_overview(df)
+    # overview with different states
+    original_df = st.session_state.original_df
 
+    overview = scanner.data_overview(original_df)
+    stat_results = stats.stat_overview(original_df)
+    
     st.subheader("Dimensions")
 
     col1, col2 = st.columns(2)
@@ -64,7 +78,7 @@ with overview_tab:
     # Statistics
     st.subheader("Numerical Statistics")
 
-    stat_results = stats.stat_overview(df)
+    stat_results = stats.stat_overview(original_df)
 
     st.dataframe(stat_results["numerical_stats"])
 
@@ -101,7 +115,124 @@ with problems_tab:
                     width='stretch'
                 )
 
-   
+                # cleaning buttons for numeric columns
+                if pd.api.types.is_numeric_dtype(
+                    st.session_state.current_df[column]
+                ):
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        if st.button(
+                            f"Fill with Mean",
+                            key=f"mean_{column}"
+                        ):
+                            # save data before cleaning
+                            before = st.session_state.current_df.copy()
+
+                            # count missing values before cleaning
+                            missing_before = (
+                                before[column].isna().sum()
+                            )
+
+                            # apply existing cleaning function
+                            st.session_state.current_df = (
+                                cleaning.fill_missing_mean(
+                                    before, column
+                                )
+                            )
+
+                            # count missing values after cleaning
+                            missing_after = (
+                                st.session_state.current_df[column]
+                                .isna()
+                                .sum()
+                            )
+
+                            cells_changed = int(
+                                missing_before - missing_after
+                            )
+
+                            # record edit in history list
+                            if cells_changed > 0:
+                                record_edit(
+                                    action="Fill missing values",
+                                    column=column,
+                                    method="Mean",
+                                    cells_changed=cells_changed
+                                )
+
+                            st.rerun()
+
+                    with col2:
+                        if st.button(
+                            "Fill with Median",
+                            key=f"median_{column}"
+                        ):
+                            before = st.session_state.current_df.copy()
+
+                            missing_before = (
+                                before[column].isna().sum()
+                            )
+
+                            st.session_state.current_df = (
+                                cleaning.fill_missing_median(
+                                    before, column
+                                )
+                            )
+
+                            missing_after = (
+                                st.session_state.current_df[column]
+                                .isna()
+                                .sum()
+                            )
+
+                            cells_changed = int(
+                                missing_before - missing_after
+                            )
+
+                            if cells_changed > 0:
+                                record_edit(
+                                    action="Fill missing values",
+                                    column=column,
+                                    method="Median",
+                                    cells_changed=cells_changed
+                                )
+
+                            st.rerun()
+                            
+                else:
+                    if st.button(
+                        "Fill with Unknown",
+                        key=f"unknown_{column}"
+                    ):
+                        before = st.session_state.current_df.copy()
+                        missing_before = before[column].isna().sum()
+
+                        st.session_state.current_df = (
+                            cleaning.fill_missing_unknown(
+                                before, column
+                            )
+                        )
+
+                        missing_after = (
+                            st.session_state.current_df[column].isna().sum()
+                        )
+
+                        cells_changed = int(
+                            missing_before - missing_after
+                        )
+
+                        if cells_changed > 0:
+                            record_edit(
+                                action="Fill missing values",
+                                column=column,
+                                method="Unknown",
+                                cells_changed=cells_changed
+                            )
+
+                        st.rerun()
+
     # mixed dtypes
     mixed = recommendations.mixed_dtypes_detection(df)
 
@@ -127,6 +258,66 @@ with problems_tab:
                     pd.DataFrame(info["inconsistent_cells"]),
                     width='stretch'
                 )
+                
+                action = st.selectbox(
+                    "How would you like to fix these values?",
+                    [
+                        "Convert inconsistent values to missing values",
+                        "Remove rows containing inconsistent values",
+                        "Replace inconsistent values with a value of your choice"
+                    ],
+                    key=f"mixed_action_{column}"
+                )
+
+                replacement_value = None
+
+                if action == (
+                    "Replace inconsistent values with a value of your choice"
+                ):
+                    replacement_value = st.text_input(
+                        "Replacement value",
+                        key=f"mixed_replacement_{column}"
+                    )
+
+                if st.button(
+                    "Apply Fix",
+                    key=f"mixed_clean_{column}"
+                ):
+                    before = st.session_state.current_df.copy()
+
+                    rows_before = len(before)
+
+                    inconsistent_count = len(
+                        info["inconsistent_cells"]
+                    )
+
+                    updated = cleaning.clean_mixed_dtypes(
+                        before,
+                        column,
+                        action,
+                        replacement_value
+                    )
+
+                    st.session_state.current_df = updated
+
+                    rows_removed = rows_before - len(updated)
+
+                    # for conversion/replacement, count affected cells.
+                    cells_changed = (
+                        inconsistent_count
+                        if action != "Remove rows containing inconsistent values"
+                        else 0
+                    )
+
+                    record_edit(
+                        action="Clean mixed data types",
+                        column=column,
+                        method=action,
+                        cells_changed=cells_changed,
+                        rows_removed=rows_removed
+                    )
+
+                    st.rerun()
 
    # outliers
     outliers = recommendations.outlier_recommendations(df)
@@ -152,9 +343,11 @@ with problems_tab:
                     }),
                     width='stretch'
                 )
-
+    
     # formatting
-    formatting = recommendations.formatting_recommendations(df)
+    formatting = recommendations.formatting_recommendations(
+        st.session_state.current_df
+    )
 
     if formatting:
         st.subheader("Formatting Issues")
@@ -163,17 +356,104 @@ with problems_tab:
             with st.expander(
                 f"{column} — formatting issues"
             ):
+                df = st.session_state.current_df
+
+                # display detected issues
                 for issue in issues:
-
-                    # Lists contain the affected values
                     if isinstance(issue, list):
-                        st.write("Affected values:")
+                        st.write("**Affected values:**")
                         st.write(issue)
-
-                    # Strings contain recommendations
                     else:
                         st.write(f"**{issue}**")
 
+                st.write("### Remove Whitespace")
+
+                if st.button(
+                    f"Remove whitespace from {column}",
+                    key=f"whitespace_{column}"
+                ):
+                    before = st.session_state.current_df.copy()
+
+                    # count cells that contain extra whitespace
+                    cells_changed = int(
+                        before[column].dropna().map(
+                            lambda value: isinstance(value, str)
+                            and value != value.strip()
+                        ).sum()
+                    )
+
+                    # call cleaning whitespace function
+                    st.session_state.current_df = (
+                        cleaning.remove_whitespace(
+                            before, column
+                        )
+                    )
+
+                    if cells_changed > 0:
+                        record_edit(
+                            action="Fix formatting",
+                            column=column,
+                            method="Remove whitespace",
+                            cells_changed=cells_changed
+                        )
+
+                    st.rerun()
+
+                st.write("### Standardize Capitalization")
+
+                values = (
+                    df[column]
+                    .dropna()
+                    .astype(str)
+                    .unique()
+                    .tolist()
+                )
+
+                if values:
+                    old_value = st.selectbox(
+                        "Value to replace",
+                        values,
+                        key=f"old_value_{column}"
+                    )
+
+                    new_value = st.text_input(
+                        "Replace with",
+                        value=old_value,
+                        key=f"new_value_{column}"
+                    )
+
+                    if st.button(
+                        f"Replace value in {column}",
+                        key=f"replace_value_{column}"
+                    ):
+                        before = st.session_state.current_df.copy()
+
+                        # count matching cells before replacement
+                        cells_changed = int(
+                            (before[column] == old_value).sum()
+                        )
+
+                        # call capitalization function
+                        st.session_state.current_df = (
+                            cleaning.standardize_capitalization(
+                                before,
+                                column,
+                                {old_value: new_value}
+                            )
+                        )
+
+                        if old_value != new_value and cells_changed > 0:
+                            record_edit(
+                                action="Fix formatting",
+                                column=column,
+                                method=f"{old_value} → {new_value}",
+                                cells_changed=cells_changed
+                            )
+
+                        st.rerun()
+
+    else:
+        st.success("No formatting issues detected.")
     # duplicates
     duplicates = recommendations.duplicate_recommendations(df)
 
@@ -188,6 +468,43 @@ with problems_tab:
             duplicates["duplicate_rows"],
             width='stretch'
         )
+
+        if duplicates["duplicate_count"] > 0:
+            option = st.selectbox(
+                "Choose how to handle duplicates",
+                [
+                    "Keep first occurrence",
+                    "Keep last occurrence",
+                    "Remove all duplicate rows"
+                ],
+                key="duplicate_option"
+            )
+
+            if st.button(
+                "Remove Duplicates",
+                key="remove_duplicates"
+            ):
+                before = st.session_state.current_df.copy()
+                rows_before = len(before)
+
+                st.session_state.current_df = (
+                    cleaning.remove_duplicate_rows(
+                        before, option
+                    )
+                )
+
+                rows_removed = (
+                    rows_before -
+                    len(st.session_state.current_df)
+                )
+
+                record_edit(
+                    action="Remove duplicate rows",
+                    method=option,
+                    rows_removed=rows_removed
+                )
+
+                st.rerun()
 
     else:
         st.subheader("Duplicate Rows")
@@ -503,3 +820,68 @@ with visuals_tab:
                 y_column
             )
             st.pyplot(fig)
+
+with cleaned_tab:
+    st.header("Cleaned Dataset")
+
+    st.write(
+        "Review the changes you have made and "
+        "download your cleaned data."
+    )
+
+    # show edit history
+    st.subheader("Cleaning History")
+
+    if st.session_state.edit_history:
+
+        history_df = pd.DataFrame(
+            st.session_state.edit_history
+        )
+
+        st.dataframe(
+            history_df,
+            width="stretch"
+        )
+
+    else:
+        st.info(
+            "No cleaning actions have been performed yet."
+        )
+
+    # show current dataset
+    st.subheader("Current Dataset")
+
+    st.dataframe(
+        st.session_state.current_df,
+        width="stretch"
+    )
+
+    # download the cleaned dataset
+    cleaned_csv = (
+        st.session_state.current_df
+        .to_csv(index=False)
+        .encode("utf-8")
+    )
+
+    st.download_button(
+        label="Download Cleaned Dataset",
+        data=cleaned_csv,
+        file_name="cleaned_dataset.csv",
+        mime="text/csv"
+    )
+
+    # download cleaning history
+    if st.session_state.edit_history:
+
+        history_csv = (
+            pd.DataFrame(st.session_state.edit_history)
+            .to_csv(index=False)
+            .encode("utf-8")
+        )
+
+        st.download_button(
+            label="Download Cleaning History",
+            data=history_csv,
+            file_name="cleaning_history.csv",
+            mime="text/csv"
+        )
