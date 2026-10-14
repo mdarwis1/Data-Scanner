@@ -12,7 +12,9 @@ st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
 
-df = pd.read_csv("test_data/scanner_overview_test_2.csv")
+df = pd.read_csv("test_data/data_scanner_cleaning_test.csv")
+
+df["_original_row"] = range(2, len(df) + 2)
 
 # states holding versions of dataset
 if "original_df" not in st.session_state:
@@ -48,7 +50,7 @@ with overview_tab:
 
     st.header("Dataset Overview")
 
-    # overview with different states
+    # always use original dataset for overview
     original_df = st.session_state.original_df
 
     overview = scanner.data_overview(original_df)
@@ -78,8 +80,6 @@ with overview_tab:
     # Statistics
     st.subheader("Numerical Statistics")
 
-    stat_results = stats.stat_overview(original_df)
-
     st.dataframe(stat_results["numerical_stats"])
 
     st.subheader("Unique Values")
@@ -102,6 +102,13 @@ with problems_tab:
     if missing:
         st.subheader("Missing Values")
 
+        df = st.session_state.current_df
+
+        columns_to_clean = [
+            column for column in df.columns
+            if column != "_original_row"
+        ]
+
         for column, info in missing.items():
             with st.expander(
                 f"{column} — {info['missing_count']} missing"
@@ -116,122 +123,142 @@ with problems_tab:
                 )
 
                 # cleaning buttons for numeric columns
-                if pd.api.types.is_numeric_dtype(
-                    st.session_state.current_df[column]
-                ):
+                
+                # choose which missing cells to clean
+                current_df = st.session_state.current_df
 
+                missing_row_options = {
+                    f"CSV row {int(current_df.loc[index, '_original_row'])}": index
+                    for index in current_df.index
+                    if pd.isna(current_df.loc[index, column])
+                }
+
+                cleaning_scope = st.radio(
+                    "Which cells should be cleaned?",
+                    ["All missing cells", "Choose specific rows"],
+                    key=f"scope_{column}"
+                )
+
+                selected_indices = []
+
+                if cleaning_scope == "Choose specific rows":
+                    selected_labels = st.multiselect(
+                        "Select rows with missing values",
+                        options=list(missing_row_options.keys()),
+                        key=f"selected_rows_{column}"
+                    )
+
+                    selected_indices = [
+                        missing_row_options[label]
+                        for label in selected_labels
+                    ]
+
+                # fill with mean/median
+                if pd.api.types.is_numeric_dtype(current_df[column]):
                     col1, col2 = st.columns(2)
 
                     with col1:
-                        if st.button(
-                            f"Fill with Mean",
-                            key=f"mean_{column}"
-                        ):
-                            # save data before cleaning
+                        if st.button("Fill with Mean", key=f"mean_{column}"):
                             before = st.session_state.current_df.copy()
 
-                            # count missing values before cleaning
-                            missing_before = (
-                                before[column].isna().sum()
-                            )
-
-                            # apply existing cleaning function
-                            st.session_state.current_df = (
-                                cleaning.fill_missing_mean(
+                            if cleaning_scope == "All missing cells":
+                                updated = cleaning.fill_missing_mean(
                                     before, column
                                 )
-                            )
+                            else:
+                                updated = before.copy()
+                                mean_value = updated[column].mean()
 
-                            # count missing values after cleaning
-                            missing_after = (
-                                st.session_state.current_df[column]
-                                .isna()
-                                .sum()
-                            )
+                                for index in selected_indices:
+                                    if pd.isna(updated.loc[index, column]):
+                                        updated.loc[index, column] = mean_value
 
                             cells_changed = int(
-                                missing_before - missing_after
+                                before[column].isna().sum()
+                                - updated[column].isna().sum()
                             )
 
-                            # record edit in history list
                             if cells_changed > 0:
+                                st.session_state.current_df = updated
                                 record_edit(
                                     action="Fill missing values",
                                     column=column,
                                     method="Mean",
                                     cells_changed=cells_changed
                                 )
+                            elif cleaning_scope == "Choose specific rows":
+                                st.warning("Select at least one missing cell.")
 
                             st.rerun()
 
                     with col2:
-                        if st.button(
-                            "Fill with Median",
-                            key=f"median_{column}"
-                        ):
+                        if st.button("Fill with Median", key=f"median_{column}"):
                             before = st.session_state.current_df.copy()
-
-                            missing_before = (
-                                before[column].isna().sum()
-                            )
-
-                            st.session_state.current_df = (
-                                cleaning.fill_missing_median(
+                        
+                            if cleaning_scope == "All missing cells":
+                                updated = cleaning.fill_missing_median(
                                     before, column
                                 )
-                            )
+                            else:
+                                updated = before.copy()
+                                median_value = updated[column].median()
 
-                            missing_after = (
-                                st.session_state.current_df[column]
-                                .isna()
-                                .sum()
-                            )
+                                for index in selected_indices:
+                                    if pd.isna(updated.loc[index, column]):
+                                        updated.loc[index, column] = median_value
 
                             cells_changed = int(
-                                missing_before - missing_after
+                                before[column].isna().sum()
+                                - updated[column].isna().sum()
                             )
 
                             if cells_changed > 0:
+                                st.session_state.current_df = updated
                                 record_edit(
                                     action="Fill missing values",
                                     column=column,
                                     method="Median",
                                     cells_changed=cells_changed
                                 )
+                            elif cleaning_scope == "Choose specific rows":
+                                st.warning("Select at least one missing cell.")
 
                             st.rerun()
-                            
-                else:
-                    if st.button(
-                        "Fill with Unknown",
-                        key=f"unknown_{column}"
-                    ):
-                        before = st.session_state.current_df.copy()
-                        missing_before = before[column].isna().sum()
 
-                        st.session_state.current_df = (
-                            cleaning.fill_missing_unknown(
+                # fill with "Unknown"
+                else:
+                    if st.button("Fill with Unknown", key=f"unknown_{column}"):
+                        before = st.session_state.current_df.copy()
+
+                        if cleaning_scope == "All missing cells":
+                            updated = cleaning.fill_missing_unknown(
                                 before, column
                             )
-                        )
+                        else:
+                            updated = before.copy()
 
-                        missing_after = (
-                            st.session_state.current_df[column].isna().sum()
-                        )
+                            for index in selected_indices:
+                                if pd.isna(updated.loc[index, column]):
+                                    updated.loc[index, column] = "Unknown"
 
                         cells_changed = int(
-                            missing_before - missing_after
+                            before[column].isna().sum()
+                            - updated[column].isna().sum()
                         )
 
                         if cells_changed > 0:
+                            st.session_state.current_df = updated
                             record_edit(
                                 action="Fill missing values",
                                 column=column,
                                 method="Unknown",
                                 cells_changed=cells_changed
                             )
+                        elif cleaning_scope == "Choose specific rows":
+                            st.warning("Select at least one missing cell.")
 
                         st.rerun()
+
 
     # mixed dtypes
     mixed = recommendations.mixed_dtypes_detection(df)
@@ -852,16 +879,20 @@ with cleaned_tab:
     st.subheader("Current Dataset")
 
     st.dataframe(
-        st.session_state.current_df,
+        st.session_state.current_df.drop(
+            columns=["_original_row"], errors="ignore"
+        ),
         width="stretch"
     )
 
     # download the cleaned dataset
     cleaned_csv = (
         st.session_state.current_df
+        .drop(columns=["_original_row"], errors="ignore")
         .to_csv(index=False)
         .encode("utf-8")
     )
+
 
     st.download_button(
         label="Download Cleaned Dataset",

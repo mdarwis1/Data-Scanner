@@ -1,0 +1,15 @@
+ID,Name,Age,Score,Hours_Studied,Grade,Subject,Mixed_Values,City,Duplicate_Test
+101, Alice ,16.0,88.0,2.5,A,Math,10, Chicago ,x
+102,bob,17.0,92.0,3.0,B,Science,20,chicago,y
+103,CHARLIE,,75.0,1.5,C,Math,thirty,NAPERVILLE,z
+104,Diana,16.0,,4.0,B,History,40,Schaumburg,w
+105,Evan ,18.0,84.0,,A,Science,unknown,Naperville ,v
+106,FAYE,17.0,91.0,2.0,,Math,60,CHICAGO,u
+107,george,16.0,77.0,3.5,C,History,seventy,Schaumburg,t
+108,Hana,,86.0,2.5,A,Science,80,naperville,s
+109,ivan,17.0,,1.0,B,Math,90,Chicago,r
+110,JULIA,16.0,95.0,4.5,A,History,one hundred,SCHAUMBURG,q
+111,kevin,200.0,500.0,100.0,C,Science,110,Chicago ,p
+112,Lena,18.0,89.0,3.0,B,Math,120,Naperville,o
+102,bob,17.0,92.0,3.0,B,Science,20,chicago,y
+105,Evan ,18.0,84.0,,A,Science,unknown,Naperville ,v

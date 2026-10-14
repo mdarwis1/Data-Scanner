@@ -6,7 +6,12 @@ import numpy as np
 
 # calculating IQR for outlier cutoffs
 def outlier_detection(df):
-    numeric_columns = df.select_dtypes(include="number").columns
+
+    numeric_columns = [
+        column
+        for column in df.select_dtypes(include="number").columns
+        if column != "_original_row"
+    ]
 
     # dictionary to associate column w outliers
     total_outliers = {}
@@ -20,41 +25,64 @@ def outlier_detection(df):
         lower_cutoff = Q1 - (IQR * 1.5)
         upper_cutoff = Q3 + (IQR * 1.5)
 
-        # gets the rows where a column has a potential outlier
-        outliers = df[(df[column] < lower_cutoff) | (df[column] > upper_cutoff)]
-        
-        # don't include columns with 0 outliers
-        if not outliers.empty:
-            total_outliers[column] = outliers[column].tolist()
+        # identifies outlier rows
+        outlier_mask = (
+            (df[column] < lower_cutoff)
+            | (df[column] > upper_cutoff)
+        )
+
+        # keep rows containing outliers
+        outlier_data = df.loc[outlier_mask]
+
+        if not outlier_data.empty:
+            total_outliers[column] = {
+                "outlier_values": outlier_data[column].tolist(),
+
+                # original CSV row numbers
+                "outlier_rows": (
+                    outlier_data["_original_row"].tolist()
+                    if "_original_row" in df.columns
+                    else (outlier_data.index + 2).tolist()
+                )
+            }
 
     return total_outliers
 
 def outlier_recommendations(df):
     outliers = outlier_detection(df)
-
     outlier_recs = {}
 
-    for column in outliers:
-
-        outlier_count = len(outliers[column])
+    for column, info in outliers.items():
+        outlier_count = len(info["outlier_values"])
 
         if outlier_count == 1:
-            recommendation = "1 potential outlier detected. Review it and consider removing or changing it."
-
+            recommendation = (
+                "1 potential outlier detected. Review it "
+                "and consider removing or changing it."
+            )
         else:
-            recommendation = "Multiple potential outliers detected. Review them and consider removing or changing them."
+            recommendation = (
+                "Multiple potential outliers detected. Review them "
+                "and consider removing or changing them."
+            )
 
         outlier_recs[column] = {
-            'outlier_count': outlier_count,
-            'outlier_values': outliers[column],
-            'recommendation': recommendation
+            "outlier_count": outlier_count,
+            "outlier_values": info["outlier_values"],
+            "outlier_rows": info["outlier_rows"],
+            "recommendation": recommendation
         }
 
     return outlier_recs
     
 
 def analyze_distribution(df):
-    numeric_columns = df.select_dtypes(include="number").columns
+
+    numeric_columns = [
+        column
+        for column in df.select_dtypes(include="number").columns
+        if column != "_original_row"
+    ]
 
     distribution_info = {}
 
@@ -76,7 +104,10 @@ def missing_value_recommendations(df):
 
     outliers = outlier_detection(df)
 
-    for column in df:
+    for column in df.columns:
+        if column == "_original_row":
+            continue
+
         missing_count = df[column].isna().sum()
 
         # if there is missing value, check whether numerical or categorical and perform corresponding logic
@@ -115,6 +146,9 @@ def mixed_dtypes_detection(df):
 
     for column in df.columns:
 
+        if column == "_original_row":
+            continue
+
         # stores values of each numeric/string value
         numeric_values = []
         non_numeric_values = []
@@ -130,14 +164,22 @@ def mixed_dtypes_detection(df):
             try:
                 float(value)
                 numeric_values.append({
-                    "row": index + 2,
+                    "row": (
+                        int(df.loc[index, "_original_row"])
+                        if "_original_row" in df.columns
+                        else index + 2
+                    ),
                     "value": value,
                     "type": "numeric"
                 })
             # if doesn't work, store it as string
             except:
                 non_numeric_values.append({
-                    "row": index + 2,
+                    "row": (
+                        int(df.loc[index, "_original_row"])
+                        if "_original_row" in df.columns
+                        else index + 2
+                    ),
                     "value": value,
                     "type": "string"
                 })
@@ -261,6 +303,8 @@ def formatting_recommendations(df):
     capitalization = capitalization_detection(df)
 
     for column in df:
+        if column == "_original_row":
+            continue
         issues = []
 
         if column in whitespace:
@@ -279,21 +323,24 @@ def formatting_recommendations(df):
 def duplicate_recommendations(df):
 
     # ID makes every row unique, detects ID column and ignores it
-    id_columns = []
+    columns_to_ignore = []
 
     for column in df.columns:
-        if "id" in column.lower():
-            id_columns.append(column)
+        if "id" in column.lower() or column == "_original_row":
+            columns_to_ignore.append(column)
 
-    data = df.drop(columns=id_columns)
+    data = df.drop(columns=columns_to_ignore)
 
     # sums up the booleans returned from .duplicated()
     duplicate_mask = data.duplicated(keep=False)
-    duplicate_count = int(data.duplicated().sum())
+    duplicate_count = int(duplicate_mask.sum())   
+     
+    duplicate_percent = (
+        duplicate_count / len(df) * 100
+        # can't divide by 0 if no rows
+        if len(df) > 0 else 0
+        )
     
-    duplicate_percent = (duplicate_count / len(df)) * 100
-
-
     duplicate_rows = df[duplicate_mask]
 
     # no duplicates
@@ -309,7 +356,7 @@ def duplicate_recommendations(df):
   
     return {
         "duplicate_count": duplicate_count,
-        "duplicate_percentage": duplicate_percent,        "duplicate_rows": duplicate_rows,
+        "duplicate_percentage": duplicate_percent,  
         "duplicate_rows": duplicate_rows,
         "recommendation": recommendation
     }
