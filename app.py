@@ -345,9 +345,11 @@ with problems_tab:
                     )
 
                     st.rerun()
-
-   # outliers
-    outliers = recommendations.outlier_recommendations(df)
+    
+    # outliers
+    outliers = recommendations.outlier_recommendations(
+        st.session_state.current_df
+    )
 
     if outliers:
         st.subheader("Potential Outliers")
@@ -358,18 +360,102 @@ with problems_tab:
                 f"{info['outlier_count']} potential outlier(s)"
             ):
                 st.write(
-                    f"**Recommendation:** "
-                    f"{info['recommendation']}"
+                    f"**Recommendation:** {info['recommendation']}"
                 )
 
                 st.write("Potential outlier values:")
 
                 st.dataframe(
                     pd.DataFrame({
+                        "CSV Row": info["outlier_rows"],
                         "Value": info["outlier_values"]
                     }),
-                    width='stretch'
+                    width="stretch"
                 )
+
+                # choose how to handle outliers
+                action = st.selectbox(
+                    "How would you like to handle these outliers?",
+                    [
+                        "Remove selected rows",
+                        "Replace with chosen value",
+                        "Replace with median"
+                    ],
+                    key=f"outlier_action_{column}"
+                )
+
+                # select individual rows
+                selected_rows = st.multiselect(
+                    "Select the CSV rows to clean",
+                    options=info["outlier_rows"],
+                    default=info["outlier_rows"],
+                    key=f"outlier_rows_{column}"
+                )
+
+                # ask for a value if the user chooses to replace 
+                replacement_value = None
+
+                if action == "Replace with chosen value":
+                    replacement_value = st.number_input(
+                        "Replacement value",
+                        value=0.0,
+                        key=f"outlier_value_{column}"
+                    )
+
+                if st.button(
+                    "Apply Outlier Cleaning",
+                    key=f"apply_outlier_{column}"
+                ):
+                    if not selected_rows:
+                        st.warning(
+                            "Please select at least one outlier row."
+                        )
+                    else:
+                        before = (
+                            st.session_state.current_df.copy()
+                        )
+
+                        updated, changed_count = (
+                            cleaning.outlier_cleaning(
+                                before,
+                                column=column,
+                                action=action,
+                                selected_rows=selected_rows,
+                                replacement_value=replacement_value
+                            )
+                        )
+
+                        if changed_count > 0:
+                            st.session_state.current_df = updated
+
+                            record_edit(
+                                action="Handle outliers",
+                                column=column,
+                                method=action,
+                                cells_changed=(
+                                    changed_count
+                                    if action != "Remove selected rows"
+                                    else 0
+                                ),
+                                rows_removed=(
+                                    changed_count
+                                    if action == "Remove selected rows"
+                                    else 0
+                                )
+                            )
+
+                            st.success(
+                                f"Processed {changed_count} outlier row(s)."
+                            )
+                            st.rerun()
+                        else:
+                            st.info(
+                                "No selected outlier rows were changed."
+                            )
+
+    else:
+        st.success("No potential outliers detected.")
+
     
     # formatting
     formatting = recommendations.formatting_recommendations(

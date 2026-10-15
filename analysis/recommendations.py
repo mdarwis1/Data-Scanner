@@ -42,7 +42,7 @@ def outlier_detection(df):
                 "outlier_rows": (
                     outlier_data["_original_row"].tolist()
                     if "_original_row" in df.columns
-                    else (outlier_data.index + 2).tolist()
+                    else outlier_data.index.tolist()
                 )
             }
 

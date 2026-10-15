@@ -119,10 +119,10 @@ def outlier_cleaning(
     if column not in outliers:
         return df, 0
 
-    # Get the exact original CSV rows containing outliers
+    # get original CSV rows containing outliers
     outlier_rows = outliers[column]["outlier_rows"]
 
-    # If no rows were selected, process all outliers
+    # if no rows were selected, process all outliers
     if selected_rows is None:
         selected_rows = outlier_rows
 
@@ -135,7 +135,7 @@ def outlier_cleaning(
     if "_original_row" in df.columns:
         mask = df["_original_row"].isin(selected_rows)
     else:
-        mask = df.index.isin([row - 2 for row in selected_rows])
+        mask = df.index.isin(selected_rows)
 
     outlier_indices = df.index[mask]
     changed_count = len(outlier_indices)
