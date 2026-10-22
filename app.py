@@ -161,6 +161,11 @@ with problems_tab:
                         if st.button("Fill with Mean", key=f"mean_{column}"):
                             before = st.session_state.current_df.copy()
 
+                            print("COLUMN:", column)
+                            print("DTYPE:", before[column].dtype)
+                            print("MISSING BEFORE:", before[column].isna().sum())
+                            print("MEAN:", before[column].mean())
+
                             if cleaning_scope == "All missing cells":
                                 updated = cleaning.fill_missing_mean(
                                     before, column
