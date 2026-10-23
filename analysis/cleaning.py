@@ -149,10 +149,6 @@ def outlier_cleaning(
 
         df.loc[outlier_indices, column] = replacement_value
 
-    elif action == "Replace with median":
-        median_value = df[column].median()
-        df.loc[outlier_indices, column] = median_value
-
     else:
         raise ValueError("Invalid outlier-cleaning action.")
 

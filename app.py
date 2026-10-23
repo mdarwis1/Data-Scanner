@@ -381,7 +381,6 @@ with problems_tab:
                     [
                         "Remove selected rows",
                         "Replace with chosen value",
-                        "Replace with median"
                     ],
                     key=f"outlier_action_{column}"
                 )
