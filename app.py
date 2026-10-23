@@ -160,15 +160,11 @@ with problems_tab:
                     with col1:
                         if st.button("Fill with Mean", key=f"mean_{column}"):
                             before = st.session_state.current_df.copy()
-
-                            print("COLUMN:", column)
-                            print("DTYPE:", before[column].dtype)
-                            print("MISSING BEFORE:", before[column].isna().sum())
-                            print("MEAN:", before[column].mean())
+                            missing_before = int(before[column].isna().sum())
 
                             if cleaning_scope == "All missing cells":
                                 updated = cleaning.fill_missing_mean(
-                                    before, column
+                                    before.copy(), column
                                 )
                             else:
                                 updated = before.copy()
@@ -178,10 +174,8 @@ with problems_tab:
                                     if pd.isna(updated.loc[index, column]):
                                         updated.loc[index, column] = mean_value
 
-                            cells_changed = int(
-                                before[column].isna().sum()
-                                - updated[column].isna().sum()
-                            )
+                            missing_after = int(updated[column].isna().sum())
+                            cells_changed = missing_before - missing_after
 
                             if cells_changed > 0:
                                 st.session_state.current_df = updated
@@ -196,14 +190,16 @@ with problems_tab:
 
                             st.rerun()
 
+
                     with col2:
                         if st.button("Fill with Median", key=f"median_{column}"):
+                            
                             before = st.session_state.current_df.copy()
-                        
+                            missing_before = int(before[column].isna().sum())
+
                             if cleaning_scope == "All missing cells":
-                                updated = cleaning.fill_missing_median(
-                                    before, column
-                                )
+                                updated = cleaning.fill_missing_median(before.copy(), column)
+                           
                             else:
                                 updated = before.copy()
                                 median_value = updated[column].median()
@@ -212,9 +208,8 @@ with problems_tab:
                                     if pd.isna(updated.loc[index, column]):
                                         updated.loc[index, column] = median_value
 
-                            cells_changed = int(
-                                before[column].isna().sum()
-                                - updated[column].isna().sum()
+                            cells_changed = (
+                                missing_before - int(updated[column].isna().sum())
                             )
 
                             if cells_changed > 0:
@@ -237,7 +232,7 @@ with problems_tab:
 
                         if cleaning_scope == "All missing cells":
                             updated = cleaning.fill_missing_unknown(
-                                before, column
+                                before.copy(), column
                             )
                         else:
                             updated = before.copy()
@@ -263,6 +258,8 @@ with problems_tab:
                             st.warning("Select at least one missing cell.")
 
                         st.rerun()
+    else:
+        st.success("No missing values detected.")
 
 
     # mixed dtypes
