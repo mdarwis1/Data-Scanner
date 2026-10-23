@@ -366,13 +366,18 @@ with problems_tab:
                 )
 
                 st.write("Potential outlier values:")
-
+                st.write(
+                    st.session_state.current_df[
+                        ["_original_row", column]
+                    ]
+                )
                 st.dataframe(
                     pd.DataFrame({
                         "CSV Row": info["outlier_rows"],
                         "Value": info["outlier_values"]
                     }),
-                    width="stretch"
+                    width="stretch",
+                    hide_index=True
                 )
 
                 # choose how to handle outliers
@@ -399,7 +404,9 @@ with problems_tab:
                 if action == "Replace with chosen value":
                     replacement_value = st.number_input(
                         "Replacement value",
-                        value=0.0,
+                        value=float(
+                            st.session_state.current_df[column].median()
+                        ),
                         key=f"outlier_value_{column}"
                     )
 
