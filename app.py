@@ -291,7 +291,6 @@ with problems_tab:
                 action = st.selectbox(
                     "How would you like to fix these values?",
                     [
-                        "Convert inconsistent values to missing values",
                         "Remove rows containing inconsistent values",
                         "Replace inconsistent values with a value of your choice"
                     ],
@@ -975,8 +974,9 @@ with cleaned_tab:
     st.dataframe(
         st.session_state.current_df.drop(
             columns=["_original_row"], errors="ignore"
-        ),
-        width="stretch"
+        ).reset_index(drop=True),
+        width="stretch",
+        hide_index=True
     )
 
     # download the cleaned dataset

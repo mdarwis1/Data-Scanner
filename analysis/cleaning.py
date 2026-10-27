@@ -19,52 +19,46 @@ def fill_missing_unknown(df, column):
 
 # convert/remove/replace mixed datatypes
 def clean_mixed_dtypes(df, column, action, replacement_value=None):
-    
-    mixed_dtypes = recommendations.mixed_dtypes_recommendations(df)
+    df = df.copy()
+
+    mixed_dtypes = recommendations.mixed_dtypes_detection(df)
+   
+    # check that the selected column was detected
+    if column not in mixed_dtypes:
+        return df
+
     inconsistent_cells = mixed_dtypes[column]["inconsistent_cells"]
 
-    if action == "Convert inconsistent values to missing values":
+    rows_to_clean = []
 
-        # converts the inconsistent cell to NaN
-        for cell in inconsistent_cells:
-            row = cell["row"] - 2
-            df.loc[row, column] = np.nan
-    elif action == "Convert inconsistent values to strings":
-        for cell in inconsistent_cells:
-            original_row = cell["row"]
+    for cell in inconsistent_cells:
+        original_row = cell["row"]
 
-            if "_original_row" in df.columns:
-                matching_indices = df.index[
-                    df["_original_row"] == original_row
-                ]
-                if len(matching_indices) > 0:
-                    df.loc[matching_indices[0], column] = str(cell["value"])
-            else:
-                row_index = original_row - 2
-                if row_index in df.index:
-                    df.loc[row_index, column] = str(cell["value"])
+        if "_original_row" in df.columns:
+            matching_indices = df.index[
+                df["_original_row"] == original_row
+            ]
+            rows_to_clean.extend(matching_indices.tolist())
+        else:
+            row_index = original_row - 2
+            if row_index in df.index:
+                rows_to_clean.append(row_index)
 
-    elif action == "Remove rows containing inconsistent values":
-        
-        rows_to_remove = []
+    # avoid duplicates
+    rows_to_clean = list(set(rows_to_clean))
 
-        # finds which rows have inconsistent cells
-        for cell in inconsistent_cells:
-            row = cell["row"] - 2
-            rows_to_remove.append(row)
-
-        # drops the ones stored in array above
-        df = df.drop(index=rows_to_remove)
+    if action == "Remove rows containing inconsistent values":
+        df = df.drop(index=rows_to_clean)
 
     elif action == "Replace inconsistent values with a value of your choice":
-        
-        for cell in inconsistent_cells:
-            row = cell["row"] - 2
+        if replacement_value is None or not str(replacement_value).strip():
+            raise ValueError("Please provide a non-empty replacement value.")
 
-            # user inputted value
-            df.loc[row, column] = replacement_value
+        for row_index in rows_to_clean:
+            df.loc[row_index, column] = replacement_value
 
     return df
+
 
 # fix formatting
 def remove_whitespace(df, column):

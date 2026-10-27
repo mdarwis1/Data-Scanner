@@ -167,7 +167,7 @@ def mixed_dtypes_detection(df):
                     "row": (
                         int(df.loc[index, "_original_row"])
                         if "_original_row" in df.columns
-                        else index + 2
+                        else int(index) + 2
                     ),
                     "value": value,
                     "type": "numeric"
@@ -178,7 +178,7 @@ def mixed_dtypes_detection(df):
                     "row": (
                         int(df.loc[index, "_original_row"])
                         if "_original_row" in df.columns
-                        else index + 2
+                        else int(index) + 2
                     ),
                     "value": value,
                     "type": "string"
