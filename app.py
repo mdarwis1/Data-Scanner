@@ -8,6 +8,9 @@ from analysis import recommendations
 from analysis import cleaning
 from visualizations import charts
 
+# widens entire page
+st.set_page_config(layout="wide")
+
 st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
@@ -110,106 +113,143 @@ with problems_tab:
         ]
 
         for column, info in missing.items():
-            with st.expander(
-                f"{column} — {info['missing_count']} missing"
-            ):
-                st.write(f"**Type:** {info['type']}")
-                st.write(f"**Recommendation:** {info['recommendation']}")
+            left, right = st.columns([2, 1])
 
-                st.write("Affected rows:")
-                st.dataframe(
-                    df[df[column].isna()],
-                    width='stretch'
-                )
+            with left:
+                with st.expander(
+                    f"{column} — {info['missing_count']} missing"
+                ):
+                    st.write(f"**Type:** {info['type']}")
+                    st.write(f"**Recommendation:** {info['recommendation']}")
 
-                # cleaning buttons for numeric columns
-                
-                # choose which missing cells to clean
-                current_df = st.session_state.current_df
-
-                missing_row_options = {
-                    f"CSV row {int(current_df.loc[index, '_original_row'])}": index
-                    for index in current_df.index
-                    if pd.isna(current_df.loc[index, column])
-                }
-
-                cleaning_scope = st.radio(
-                    "Which cells should be cleaned?",
-                    ["All missing cells", "Choose specific rows"],
-                    key=f"scope_{column}"
-                )
-
-                selected_indices = []
-
-                if cleaning_scope == "Choose specific rows":
-                    selected_labels = st.multiselect(
-                        "Select rows with missing values",
-                        options=list(missing_row_options.keys()),
-                        key=f"selected_rows_{column}"
+                    st.write("Affected rows:")
+                    st.dataframe(
+                        df[df[column].isna()],
+                        width='stretch'
                     )
 
-                    selected_indices = [
-                        missing_row_options[label]
-                        for label in selected_labels
-                    ]
+                    # cleaning buttons for numeric columns
+                    
+                    # choose which missing cells to clean
+                    current_df = st.session_state.current_df
 
-                # fill with mean/median
-                if pd.api.types.is_numeric_dtype(current_df[column]):
-                    col1, col2 = st.columns(2)
+                    missing_row_options = {
+                        f"CSV row {int(current_df.loc[index, '_original_row'])}": index
+                        for index in current_df.index
+                        if pd.isna(current_df.loc[index, column])
+                    }
 
-                    with col1:
-                        if st.button("Fill with Mean", key=f"mean_{column}"):
+                    cleaning_scope = st.radio(
+                        "Which cells should be cleaned?",
+                        ["All missing cells", "Choose specific rows"],
+                        key=f"scope_{column}"
+                    )
+
+                    selected_indices = []
+
+                    if cleaning_scope == "Choose specific rows":
+                        selected_labels = st.multiselect(
+                            "Select rows with missing values",
+                            options=list(missing_row_options.keys()),
+                            key=f"selected_rows_{column}"
+                        )
+
+                        selected_indices = [
+                            missing_row_options[label]
+                            for label in selected_labels
+                        ]
+
+                    # fill with mean/median
+                    if pd.api.types.is_numeric_dtype(current_df[column]):
+                        col1, col2 = st.columns(2)
+
+                        with col1:
+                            if st.button("Fill with Mean", key=f"mean_{column}"):
+                                before = st.session_state.current_df.copy()
+                                missing_before = int(before[column].isna().sum())
+
+                                if cleaning_scope == "All missing cells":
+                                    updated = cleaning.fill_missing_mean(
+                                        before.copy(), column
+                                    )
+                                else:
+                                    updated = before.copy()
+                                    mean_value = updated[column].mean()
+
+                                    for index in selected_indices:
+                                        if pd.isna(updated.loc[index, column]):
+                                            updated.loc[index, column] = mean_value
+
+                                missing_after = int(updated[column].isna().sum())
+                                cells_changed = missing_before - missing_after
+
+                                if cells_changed > 0:
+                                    st.session_state.current_df = updated
+                                    record_edit(
+                                        action="Fill missing values",
+                                        column=column,
+                                        method="Mean",
+                                        cells_changed=cells_changed
+                                    )
+                                elif cleaning_scope == "Choose specific rows":
+                                    st.warning("Select at least one missing cell.")
+
+                                st.rerun()
+
+
+                        with col2:
+                            if st.button("Fill with Median", key=f"median_{column}"):
+                                
+                                before = st.session_state.current_df.copy()
+                                missing_before = int(before[column].isna().sum())
+
+                                if cleaning_scope == "All missing cells":
+                                    updated = cleaning.fill_missing_median(before.copy(), column)
+                            
+                                else:
+                                    updated = before.copy()
+                                    median_value = updated[column].median()
+
+                                    for index in selected_indices:
+                                        if pd.isna(updated.loc[index, column]):
+                                            updated.loc[index, column] = median_value
+
+                                cells_changed = (
+                                    missing_before - int(updated[column].isna().sum())
+                                )
+
+                                if cells_changed > 0:
+                                    st.session_state.current_df = updated
+                                    record_edit(
+                                        action="Fill missing values",
+                                        column=column,
+                                        method="Median",
+                                        cells_changed=cells_changed
+                                    )
+                                elif cleaning_scope == "Choose specific rows":
+                                    st.warning("Select at least one missing cell.")
+
+                                st.rerun()
+
+                    # fill with "Unknown"
+                    else:
+                        if st.button("Fill with Unknown", key=f"unknown_{column}"):
                             before = st.session_state.current_df.copy()
-                            missing_before = int(before[column].isna().sum())
 
                             if cleaning_scope == "All missing cells":
-                                updated = cleaning.fill_missing_mean(
+                                updated = cleaning.fill_missing_unknown(
                                     before.copy(), column
                                 )
                             else:
                                 updated = before.copy()
-                                mean_value = updated[column].mean()
 
                                 for index in selected_indices:
                                     if pd.isna(updated.loc[index, column]):
-                                        updated.loc[index, column] = mean_value
+                                        updated.loc[index, column] = "Unknown"
 
-                            missing_after = int(updated[column].isna().sum())
-                            cells_changed = missing_before - missing_after
-
-                            if cells_changed > 0:
-                                st.session_state.current_df = updated
-                                record_edit(
-                                    action="Fill missing values",
-                                    column=column,
-                                    method="Mean",
-                                    cells_changed=cells_changed
-                                )
-                            elif cleaning_scope == "Choose specific rows":
-                                st.warning("Select at least one missing cell.")
-
-                            st.rerun()
-
-
-                    with col2:
-                        if st.button("Fill with Median", key=f"median_{column}"):
-                            
-                            before = st.session_state.current_df.copy()
-                            missing_before = int(before[column].isna().sum())
-
-                            if cleaning_scope == "All missing cells":
-                                updated = cleaning.fill_missing_median(before.copy(), column)
-                           
-                            else:
-                                updated = before.copy()
-                                median_value = updated[column].median()
-
-                                for index in selected_indices:
-                                    if pd.isna(updated.loc[index, column]):
-                                        updated.loc[index, column] = median_value
-
-                            cells_changed = (
-                                missing_before - int(updated[column].isna().sum())
+                            cells_changed = int(
+                                before[column].isna().sum()
+                                - updated[column].isna().sum()
                             )
 
                             if cells_changed > 0:
@@ -217,47 +257,13 @@ with problems_tab:
                                 record_edit(
                                     action="Fill missing values",
                                     column=column,
-                                    method="Median",
+                                    method="Unknown",
                                     cells_changed=cells_changed
                                 )
                             elif cleaning_scope == "Choose specific rows":
                                 st.warning("Select at least one missing cell.")
 
                             st.rerun()
-
-                # fill with "Unknown"
-                else:
-                    if st.button("Fill with Unknown", key=f"unknown_{column}"):
-                        before = st.session_state.current_df.copy()
-
-                        if cleaning_scope == "All missing cells":
-                            updated = cleaning.fill_missing_unknown(
-                                before.copy(), column
-                            )
-                        else:
-                            updated = before.copy()
-
-                            for index in selected_indices:
-                                if pd.isna(updated.loc[index, column]):
-                                    updated.loc[index, column] = "Unknown"
-
-                        cells_changed = int(
-                            before[column].isna().sum()
-                            - updated[column].isna().sum()
-                        )
-
-                        if cells_changed > 0:
-                            st.session_state.current_df = updated
-                            record_edit(
-                                action="Fill missing values",
-                                column=column,
-                                method="Unknown",
-                                cells_changed=cells_changed
-                            )
-                        elif cleaning_scope == "Choose specific rows":
-                            st.warning("Select at least one missing cell.")
-
-                        st.rerun()
     else:
         st.success("No missing values detected.")
 
@@ -269,85 +275,94 @@ with problems_tab:
         st.subheader("Mixed Data Types")
 
         for column, info in mixed.items():
-            with st.expander(
-                f"{column} — mixed data types"
-            ):
-                st.write(
-                    f"**Types found:** "
-                    f"{', '.join(info['types_present'])}"
-                )
 
-                st.write(
-                    f"**Majority type:** {info['majority_type']}"
-                )
+            # make expander narrower
+            left, right = st.columns([2, 1])
 
-                st.write("Inconsistent cells:")
+            with left:
+                with st.expander(
+                    f"{column} — mixed data types"
+                ):
+                    st.write(
+                        f"**Types found:** "
+                        f"{', '.join(info['types_present'])}"
+                    )
 
-                st.dataframe(
-                    pd.DataFrame(info["inconsistent_cells"]),
-                    width='stretch'
-                )
-                
-                action = st.selectbox(
-                    "How would you like to fix these values?",
-                    [
-                        "Remove rows containing inconsistent values",
+                    st.write(
+                        f"**Majority type:** {info['majority_type']}"
+                    )
+
+                    st.write("Inconsistent cells:")
+
+                    st.dataframe(
+                        pd.DataFrame(info["inconsistent_cells"]),
+                        width="stretch"
+                    )
+
+                    # make dropdown narrower 
+                    dropdown_col, empty_col = st.columns([2, 1])
+
+                    with dropdown_col:
+                        action = st.selectbox(
+                            "How would you like to fix these values?",
+                            [
+                                "Remove rows containing inconsistent values",
+                                "Replace inconsistent values with a value of your choice"
+                            ],
+                            key=f"mixed_action_{column}"
+                        )
+
+                    replacement_value = None
+
+                    if action == (
                         "Replace inconsistent values with a value of your choice"
-                    ],
-                    key=f"mixed_action_{column}"
-                )
+                    ):
+                        replacement_value = st.text_input(
+                            "Replacement value",
+                            key=f"mixed_replacement_{column}"
+                        )
 
-                replacement_value = None
+                    if st.button(
+                        "Apply Fix",
+                        key=f"mixed_clean_{column}"
+                    ):
+                        before = st.session_state.current_df.copy()
 
-                if action == (
-                    "Replace inconsistent values with a value of your choice"
-                ):
-                    replacement_value = st.text_input(
-                        "Replacement value",
-                        key=f"mixed_replacement_{column}"
-                    )
+                        rows_before = len(before)
 
-                if st.button(
-                    "Apply Fix",
-                    key=f"mixed_clean_{column}"
-                ):
-                    before = st.session_state.current_df.copy()
+                        inconsistent_count = len(
+                            info["inconsistent_cells"]
+                        )
 
-                    rows_before = len(before)
+                        updated = cleaning.clean_mixed_dtypes(
+                            before,
+                            column,
+                            action,
+                            replacement_value
+                        )
 
-                    inconsistent_count = len(
-                        info["inconsistent_cells"]
-                    )
+                        st.session_state.current_df = updated
 
-                    updated = cleaning.clean_mixed_dtypes(
-                        before,
-                        column,
-                        action,
-                        replacement_value
-                    )
+                        rows_removed = rows_before - len(updated)
 
-                    st.session_state.current_df = updated
+                        # for conversion/replacement, count affected cells.
+                        cells_changed = (
+                            inconsistent_count
+                            if action != "Remove rows containing inconsistent values"
+                            else 0
+                        )
 
-                    rows_removed = rows_before - len(updated)
+                        record_edit(
+                            action="Clean mixed data types",
+                            column=column,
+                            method=action,
+                            cells_changed=cells_changed,
+                            rows_removed=rows_removed
+                        )
 
-                    # for conversion/replacement, count affected cells.
-                    cells_changed = (
-                        inconsistent_count
-                        if action != "Remove rows containing inconsistent values"
-                        else 0
-                    )
-
-                    record_edit(
-                        action="Clean mixed data types",
-                        column=column,
-                        method=action,
-                        cells_changed=cells_changed,
-                        rows_removed=rows_removed
-                    )
-
-                    st.rerun()
+                        st.rerun()
     else:
-            st.success("No mixed datatypes detected.")
+        st.success("No mixed datatypes detected.")
 
     # outliers
     outliers = recommendations.outlier_recommendations(
@@ -358,109 +373,112 @@ with problems_tab:
         st.subheader("Potential Outliers")
 
         for column, info in outliers.items():
-            with st.expander(
-                f"{column} — "
-                f"{info['outlier_count']} potential outlier(s)"
-            ):
-                st.write(
-                    f"**Recommendation:** {info['recommendation']}"
-                )
+            left, right = st.columns([2, 1])
 
-                st.write("Potential outlier values:")
-                st.write(
-                    st.session_state.current_df[
-                        ["_original_row", column]
-                    ]
-                )
-                st.dataframe(
-                    pd.DataFrame({
-                        "CSV Row": info["outlier_rows"],
-                        "Value": info["outlier_values"]
-                    }),
-                    width="stretch",
-                    hide_index=True
-                )
-
-                # choose how to handle outliers
-                action = st.selectbox(
-                    "How would you like to handle these outliers?",
-                    [
-                        "Remove selected rows",
-                        "Replace with chosen value",
-                    ],
-                    key=f"outlier_action_{column}"
-                )
-
-                # select individual rows
-                selected_rows = st.multiselect(
-                    "Select the CSV rows to clean",
-                    options=info["outlier_rows"],
-                    default=info["outlier_rows"],
-                    key=f"outlier_rows_{column}"
-                )
-
-                # ask for a value if the user chooses to replace 
-                replacement_value = None
-
-                if action == "Replace with chosen value":
-                    replacement_value = st.number_input(
-                        "Replacement value",
-                        value=float(
-                            st.session_state.current_df[column].median()
-                        ),
-                        key=f"outlier_value_{column}"
+            with left:
+                with st.expander(
+                    f"{column} — "
+                    f"{info['outlier_count']} potential outlier(s)"
+                ):
+                    st.write(
+                        f"**Recommendation:** {info['recommendation']}"
                     )
 
-                if st.button(
-                    "Apply Outlier Cleaning",
-                    key=f"apply_outlier_{column}"
-                ):
-                    if not selected_rows:
-                        st.warning(
-                            "Please select at least one outlier row."
-                        )
-                    else:
-                        before = (
-                            st.session_state.current_df.copy()
+                    st.write("Potential outlier values:")
+                    st.write(
+                        st.session_state.current_df[
+                            ["_original_row", column]
+                        ]
+                    )
+                    st.dataframe(
+                        pd.DataFrame({
+                            "CSV Row": info["outlier_rows"],
+                            "Value": info["outlier_values"]
+                        }),
+                        width="stretch",
+                        hide_index=True
+                    )
+
+                    # choose how to handle outliers
+                    action = st.selectbox(
+                        "How would you like to handle these outliers?",
+                        [
+                            "Remove selected rows",
+                            "Replace with chosen value",
+                        ],
+                        key=f"outlier_action_{column}"
+                    )
+
+                    # select individual rows
+                    selected_rows = st.multiselect(
+                        "Select the CSV rows to clean",
+                        options=info["outlier_rows"],
+                        default=info["outlier_rows"],
+                        key=f"outlier_rows_{column}"
+                    )
+
+                    # ask for a value if the user chooses to replace 
+                    replacement_value = None
+
+                    if action == "Replace with chosen value":
+                        replacement_value = st.number_input(
+                            "Replacement value",
+                            value=float(
+                                st.session_state.current_df[column].median()
+                            ),
+                            key=f"outlier_value_{column}"
                         )
 
-                        updated, changed_count = (
-                            cleaning.outlier_cleaning(
-                                before,
-                                column=column,
-                                action=action,
-                                selected_rows=selected_rows,
-                                replacement_value=replacement_value
+                    if st.button(
+                        "Apply Outlier Cleaning",
+                        key=f"apply_outlier_{column}"
+                    ):
+                        if not selected_rows:
+                            st.warning(
+                                "Please select at least one outlier row."
                             )
-                        )
+                        else:
+                            before = (
+                                st.session_state.current_df.copy()
+                            )
 
-                        if changed_count > 0:
-                            st.session_state.current_df = updated
-
-                            record_edit(
-                                action="Handle outliers",
-                                column=column,
-                                method=action,
-                                cells_changed=(
-                                    changed_count
-                                    if action != "Remove selected rows"
-                                    else 0
-                                ),
-                                rows_removed=(
-                                    changed_count
-                                    if action == "Remove selected rows"
-                                    else 0
+                            updated, changed_count = (
+                                cleaning.outlier_cleaning(
+                                    before,
+                                    column=column,
+                                    action=action,
+                                    selected_rows=selected_rows,
+                                    replacement_value=replacement_value
                                 )
                             )
 
-                            st.success(
-                                f"Processed {changed_count} outlier row(s)."
-                            )
-                            st.rerun()
-                        else:
-                            st.info(
-                                "No selected outlier rows were changed."
-                            )
+                            if changed_count > 0:
+                                st.session_state.current_df = updated
+
+                                record_edit(
+                                    action="Handle outliers",
+                                    column=column,
+                                    method=action,
+                                    cells_changed=(
+                                        changed_count
+                                        if action != "Remove selected rows"
+                                        else 0
+                                    ),
+                                    rows_removed=(
+                                        changed_count
+                                        if action == "Remove selected rows"
+                                        else 0
+                                    )
+                                )
+
+                                st.success(
+                                    f"Processed {changed_count} outlier row(s)."
+                                )
+                                st.rerun()
+                            else:
+                                st.info(
+                                    "No selected outlier rows were changed."
+                                )
 
     else:
         st.success("No potential outliers detected.")
@@ -475,104 +493,107 @@ with problems_tab:
         st.subheader("Formatting Issues")
 
         for column, issues in formatting.items():
-            with st.expander(
-                f"{column} — formatting issues"
-            ):
-                df = st.session_state.current_df
+            left, right = st.columns([2, 1])
 
-                # display detected issues
-                for issue in issues:
-                    if isinstance(issue, list):
-                        st.write("**Affected values:**")
-                        st.write(issue)
-                    else:
-                        st.write(f"**{issue}**")
-
-                st.write("### Remove Whitespace")
-
-                if st.button(
-                    f"Remove whitespace from {column}",
-                    key=f"whitespace_{column}"
+            with left:
+                with st.expander(
+                    f"{column} — formatting issues"
                 ):
-                    before = st.session_state.current_df.copy()
+                    df = st.session_state.current_df
 
-                    # count cells that contain extra whitespace
-                    cells_changed = int(
-                        before[column].dropna().map(
-                            lambda value: isinstance(value, str)
-                            and value != value.strip()
-                        ).sum()
-                    )
+                    # display detected issues
+                    for issue in issues:
+                        if isinstance(issue, list):
+                            st.write("**Affected values:**")
+                            st.write(issue)
+                        else:
+                            st.write(f"**{issue}**")
 
-                    # call cleaning whitespace function
-                    st.session_state.current_df = (
-                        cleaning.remove_whitespace(
-                            before, column
-                        )
-                    )
-
-                    if cells_changed > 0:
-                        record_edit(
-                            action="Fix formatting",
-                            column=column,
-                            method="Remove whitespace",
-                            cells_changed=cells_changed
-                        )
-
-                    st.rerun()
-
-                st.write("### Standardize Capitalization")
-
-                values = (
-                    df[column]
-                    .dropna()
-                    .astype(str)
-                    .unique()
-                    .tolist()
-                )
-
-                if values:
-                    old_value = st.selectbox(
-                        "Value to replace",
-                        values,
-                        key=f"old_value_{column}"
-                    )
-
-                    new_value = st.text_input(
-                        "Replace with",
-                        value=old_value,
-                        key=f"new_value_{column}"
-                    )
+                    st.write("### Remove Whitespace")
 
                     if st.button(
-                        f"Replace value in {column}",
-                        key=f"replace_value_{column}"
+                        f"Remove whitespace from {column}",
+                        key=f"whitespace_{column}"
                     ):
                         before = st.session_state.current_df.copy()
 
-                        # count matching cells before replacement
+                        # count cells that contain extra whitespace
                         cells_changed = int(
-                            (before[column] == old_value).sum()
+                            before[column].dropna().map(
+                                lambda value: isinstance(value, str)
+                                and value != value.strip()
+                            ).sum()
                         )
 
-                        # call capitalization function
+                        # call cleaning whitespace function
                         st.session_state.current_df = (
-                            cleaning.standardize_capitalization(
-                                before,
-                                column,
-                                {old_value: new_value}
+                            cleaning.remove_whitespace(
+                                before, column
                             )
                         )
 
-                        if old_value != new_value and cells_changed > 0:
+                        if cells_changed > 0:
                             record_edit(
                                 action="Fix formatting",
                                 column=column,
-                                method=f"{old_value} → {new_value}",
+                                method="Remove whitespace",
                                 cells_changed=cells_changed
                             )
 
                         st.rerun()
+
+                    st.write("### Standardize Capitalization")
+
+                    values = (
+                        df[column]
+                        .dropna()
+                        .astype(str)
+                        .unique()
+                        .tolist()
+                    )
+
+                    if values:
+                        old_value = st.selectbox(
+                            "Value to replace",
+                            values,
+                            key=f"old_value_{column}"
+                        )
+
+                        new_value = st.text_input(
+                            "Replace with",
+                            value=old_value,
+                            key=f"new_value_{column}"
+                        )
+
+                        if st.button(
+                            f"Replace value in {column}",
+                            key=f"replace_value_{column}"
+                        ):
+                            before = st.session_state.current_df.copy()
+
+                            # count matching cells before replacement
+                            cells_changed = int(
+                                (before[column] == old_value).sum()
+                            )
+
+                            # call capitalization function
+                            st.session_state.current_df = (
+                                cleaning.standardize_capitalization(
+                                    before,
+                                    column,
+                                    {old_value: new_value}
+                                )
+                            )
+
+                            if old_value != new_value and cells_changed > 0:
+                                record_edit(
+                                    action="Fix formatting",
+                                    column=column,
+                                    method=f"{old_value} → {new_value}",
+                                    cells_changed=cells_changed
+                                )
+
+                            st.rerun()
 
     else:
         st.success("No formatting issues detected.")
