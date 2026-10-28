@@ -11,6 +11,7 @@ from visualizations import charts
 # widens entire page
 st.set_page_config(layout="wide")
 
+
 st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
@@ -51,8 +52,10 @@ overview_tab, problems_tab, visuals_tab, cleaned_tab = st.tabs(
 
 with overview_tab:
 
-    st.header("Dataset Overview")
-
+    st.markdown(
+        "<h2 style='text-align: center;'>Dataset Overview</h2>",
+        unsafe_allow_html=True
+    )
     # always use original dataset for overview
     original_df = st.session_state.original_df
 
@@ -97,7 +100,10 @@ with overview_tab:
         st.dataframe(counts)
 
 with problems_tab:
-    st.header("Problems Detected")
+    st.markdown(
+        "<h2 style='text-align: center;'>Problems Detected</h2>",
+        unsafe_allow_html=True
+    )
 
     # missing values
     missing = recommendations.missing_value_recommendations(df)
@@ -626,15 +632,18 @@ with problems_tab:
         )
 
         if duplicates["duplicate_count"] > 0:
-            option = st.selectbox(
-                "Choose how to handle duplicates",
-                [
-                    "Keep first occurrence",
-                    "Keep last occurrence",
-                    "Remove all duplicate rows"
-                ],
-                key="duplicate_option"
-            )
+            dropdown_col, empty_col = st.columns([2, 1])
+
+            with dropdown_col:
+                option = st.selectbox(
+                    "Choose how to handle duplicates",
+                    [
+                        "Keep first occurrence",
+                        "Keep last occurrence",
+                        "Remove all duplicate rows"
+                    ],
+                    key="duplicate_option"
+                )
 
             if st.button(
                 "Remove Duplicates",
@@ -670,8 +679,10 @@ with problems_tab:
             st.success("No duplicate rows detected.")
 
 with visuals_tab:
-    st.header("Recommended Visualizations")
-
+    st.markdown(
+        "<h2 style='text-align: center;'>Recommended Visualizations</h2>",
+        unsafe_allow_html=True
+    )
     st.write(
         "Data Scanner analyzed your dataset and recommends "
         "visualizations that may help you understand your data."
@@ -701,71 +712,73 @@ with visuals_tab:
     # show graph groups
     for graph_type, group in graph_groups.items():
 
-        # don't display empty graph categories
+    # don't display empty graph categories
         if not group:
             continue
 
+        # narrow visualization expanders
+        expander_col, empty_col = st.columns([2, 1])
 
-        # graph type dropdown
-        with st.expander(
-            f"{graph_type} ({len(group)})"
-        ):
-            
-            # loop through recommendations
-            for i, recommendation in enumerate(group):
+        with expander_col:
+            with st.expander(
+                f"{graph_type} ({len(group)})"
+            ):
+                
+                # loop through recommendations
+                for i, recommendation in enumerate(group):
 
-                columns = recommendation["columns"]
+                    columns = recommendation["columns"]
 
-                reason = recommendation["reason"]
+                    reason = recommendation["reason"]
 
-                priority = recommendation["priority"]
+                    priority = recommendation["priority"]
 
-                # column name
-                st.subheader(
-                    " vs ".join(columns)
-                    if len(columns) > 1
-                    else columns[0]
-                )
+                    # column name
+                    st.subheader(
+                        " vs ".join(columns)
+                        if len(columns) > 1
+                        else columns[0]
+                    )
 
-               # priority ranking system
-                if priority == 3:
+                # priority ranking system
+                    if priority == 3:
 
+                        st.write(
+                            "⭐ **High Priority**"
+                        )
+                    elif priority == 2:
+
+                        st.write(
+                            "**Recommended**"
+                        )
+                    else:
+                        st.write(
+                            "**Optional**"
+                        )
+
+                    # reasoning/explanation
                     st.write(
-                        "⭐ **High Priority**"
-                    )
-                elif priority == 2:
-
-                    st.write(
-                        "**Recommended**"
-                    )
-                else:
-                    st.write(
-                        "**Optional**"
+                        f"**Why:** {reason}"
                     )
 
-                # reasoning/explanation
-                st.write(
-                    f"**Why:** {reason}"
-                )
+                    # correlation
+                    if "correlation" in recommendation:
 
-                # correlation
-                if "correlation" in recommendation:
+                        st.write(
+                            f"**Correlation:** "
+                            f"{recommendation['correlation']}"
+                        )
 
-                    st.write(
-                        f"**Correlation:** "
-                        f"{recommendation['correlation']}"
-                    )
+                # button in each
+                    if st.button(
+                        f"Use {graph_type}",
+                        key=f"{graph_type}_{i}"
+                    ):
+                        st.session_state.selected_visual = (
+                            recommendation
+                        )
 
-               # button in each
-                if st.button(
-                    f"Use {graph_type}",
-                    key=f"{graph_type}_{i}"
-                ):
-                    st.session_state.selected_visual = (
-                        recommendation
-                    )
-
-                st.divider()
+                    st.divider()
 
     # display recommendations
     if "selected_visual" in st.session_state:
@@ -843,30 +856,31 @@ with visuals_tab:
     all_columns = df.columns.tolist()
 
     # graph types
-    manual_graph_type = st.selectbox(
-        "Visualization type",
+    dropdown_col, empty_col = st.columns([2, 1])
 
-        [
-            "Histogram",
-            "Box Plot",
-            "Scatterplot",
-            "Bar Graph",
-            "Line Graph"
-        ],
-
-        key="manual_graph_type"
-    )
+    with dropdown_col:
+        manual_graph_type = st.selectbox(
+            "Visualization type",
+            [
+                "Histogram",
+                "Box Plot",
+                "Scatterplot",
+                "Bar Graph",
+                "Line Graph"
+            ],
+            key="manual_graph_type"
+        )
 
     if manual_graph_type == "Histogram":
 
-        column = st.selectbox(
-            "Column",
+        dropdown_col, empty_col = st.columns([2, 1])
 
-            numeric_columns,
-
-            key="manual_histogram_column"
-        )
-
+        with dropdown_col:
+            column = st.selectbox(
+                "Column",
+                numeric_columns,
+                key="manual_histogram_column"
+            )
         if st.button(
             "Create Histogram",
             key="create_histogram"
@@ -880,13 +894,14 @@ with visuals_tab:
 
     elif manual_graph_type == "Box Plot":
 
-        column = st.selectbox(
-            "Column",
+        dropdown_col, empty_col = st.columns([2, 1])
 
-            numeric_columns,
-
-            key="manual_box_column"
-        )
+        with dropdown_col:
+            column = st.selectbox(
+                "Column",
+                numeric_columns,
+                key="manual_box_column"
+            )
 
         if st.button(
             "Create Box Plot",
@@ -901,13 +916,14 @@ with visuals_tab:
 
     elif manual_graph_type == "Bar Graph":
 
-        column = st.selectbox(
-            "Column",
+        dropdown_col, empty_col = st.columns([2, 1])
 
-            all_columns,
-
-            key="manual_bar_column"
-        )
+        with dropdown_col:
+            column = st.selectbox(
+                "Column",
+                all_columns,
+                key="manual_bar_column"
+            )
 
         if st.button(
             "Create Bar Graph",
@@ -922,21 +938,23 @@ with visuals_tab:
 
     elif manual_graph_type == "Scatterplot":
 
-        x_column = st.selectbox(
-            "X-axis",
+        dropdown_col, empty_col = st.columns([2, 1])
 
-            numeric_columns,
+        with dropdown_col:
+            x_column = st.selectbox(
+                "X-axis",
+                numeric_columns,
+                key="manual_scatter_x"
+            )
 
-            key="manual_scatter_x"
-        )
+        dropdown_col, empty_col = st.columns([2, 1])
 
-        y_column = st.selectbox(
-            "Y-axis",
-
-            numeric_columns,
-
-            key="manual_scatter_y"
-        )
+        with dropdown_col:
+            y_column = st.selectbox(
+                "Y-axis",
+                numeric_columns,
+                key="manual_scatter_y"
+            )
 
         if st.button(
             "Create Scatterplot",
@@ -952,21 +970,23 @@ with visuals_tab:
 
     elif manual_graph_type == "Line Graph":
 
-        x_column = st.selectbox(
-            "X-axis",
+        dropdown_col, empty_col = st.columns([2, 1])
 
-            all_columns,
+        with dropdown_col:
+            x_column = st.selectbox(
+                "X-axis",
+                all_columns,
+                key="manual_line_x"
+            )
 
-            key="manual_line_x"
-        )
+        dropdown_col, empty_col = st.columns([2, 1])
 
-        y_column = st.selectbox(
-            "Y-axis",
-
-            numeric_columns,
-
-            key="manual_line_y"
-        )
+        with dropdown_col:
+            y_column = st.selectbox(
+                "Y-axis",
+                numeric_columns,
+                key="manual_line_y"
+            )
 
         if st.button(
             "Create Line Graph",
@@ -981,8 +1001,10 @@ with visuals_tab:
             st.pyplot(fig)
 
 with cleaned_tab:
-    st.header("Cleaned Dataset")
-
+    st.markdown(
+        "<h2 style='text-align: center;'>Cleaned Dataset</h2>",
+        unsafe_allow_html=True
+    )
     st.write(
         "Review the changes you have made and "
         "download your cleaned data."
