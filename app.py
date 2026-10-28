@@ -265,7 +265,10 @@ with problems_tab:
 
                             st.rerun()
     else:
-        st.success("No missing values detected.")
+        left, right = st.columns([1,3])
+
+        with left:
+            st.success("No missing values detected.")
 
 
     # mixed dtypes
@@ -362,7 +365,10 @@ with problems_tab:
 
                         st.rerun()
     else:
-        st.success("No mixed datatypes detected.")
+        left, right = st.columns([1,3])
+        
+        with left:
+            st.success("No mixed datatypes detected.")
 
     # outliers
     outliers = recommendations.outlier_recommendations(
@@ -481,7 +487,10 @@ with problems_tab:
                                 )
 
     else:
-        st.success("No potential outliers detected.")
+        left, right = st.columns([1,3])
+        
+        with left:
+            st.success("No potential outliers detected.")
 
     
     # formatting
@@ -596,7 +605,11 @@ with problems_tab:
                             st.rerun()
 
     else:
-        st.success("No formatting issues detected.")
+        left, right = st.columns([1,3])
+        
+        with left:
+            st.success("No formatting issues detected.")
+    
     # duplicates
     duplicates = recommendations.duplicate_recommendations(df)
 
@@ -651,7 +664,10 @@ with problems_tab:
 
     else:
         st.subheader("Duplicate Rows")
-        st.success("No duplicate rows detected.")
+        left, right = st.columns([1,3])
+        
+        with left:
+            st.success("No duplicate rows detected.")
 
 with visuals_tab:
     st.header("Recommended Visualizations")
