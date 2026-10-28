@@ -346,7 +346,9 @@ with problems_tab:
                     )
 
                     st.rerun()
-    
+    else:
+            st.success("No mixed datatypes detected.")
+
     # outliers
     outliers = recommendations.outlier_recommendations(
         st.session_state.current_df
@@ -628,7 +630,7 @@ with problems_tab:
 
     else:
         st.subheader("Duplicate Rows")
-        st.write("No duplicate rows detected.")
+        st.success("No duplicate rows detected.")
 
 with visuals_tab:
     st.header("Recommended Visualizations")
