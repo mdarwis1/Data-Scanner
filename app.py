@@ -16,8 +16,18 @@ st.title("Data Scanner")
 
 st.write("Upload a CSV to get started!")
 
-df = pd.read_csv("test_data/data_scanner_cleaning_test.csv")
+col1, col2 = st.columns([1, 3])
 
+with col1:
+    uploaded_file = st.file_uploader(
+        "Upload a CSV",
+        type="csv"
+    )
+
+if uploaded_file is None:
+    st.stop()
+
+df = pd.read_csv(uploaded_file)
 df["_original_row"] = range(2, len(df) + 2)
 
 # states holding versions of dataset
@@ -70,7 +80,7 @@ with overview_tab:
             unsafe_allow_html=True
         )
 
-        col1, spacer, col2 = st.columns([6, 20, 6])
+        col1, spacer, col2 = st.columns([10, 20, 10])
 
         with col1:
             st.metric("Rows", overview["dimensions"]["rows"])
@@ -804,7 +814,11 @@ with visuals_tab:
                 df,
                 columns[0]
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
        # box plot
         elif graph_type == "Box Plot":
@@ -813,7 +827,11 @@ with visuals_tab:
                 df,
                 columns[0]
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
         # scatterplot
         elif graph_type == "Scatterplot":
@@ -823,7 +841,11 @@ with visuals_tab:
                 columns[0],
                 columns[1]
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
         # bar graph
         elif graph_type == "Bar Graph":
@@ -832,7 +854,11 @@ with visuals_tab:
                 df,
                 columns[0]
             )
-            st.pyplot(fig)
+            
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
         # line graph
         elif graph_type == "Line Graph":
@@ -842,7 +868,11 @@ with visuals_tab:
                 columns[0],
                 columns[1]
             )
-            st.pyplot(fig)
+            
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
     # for MANUALLY creating graphs
     st.divider()
@@ -894,7 +924,11 @@ with visuals_tab:
                 df,
                 column
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
     elif manual_graph_type == "Box Plot":
 
@@ -916,7 +950,11 @@ with visuals_tab:
                 df,
                 column
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
     elif manual_graph_type == "Bar Graph":
 
@@ -938,7 +976,11 @@ with visuals_tab:
                 df,
                 column
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
     elif manual_graph_type == "Scatterplot":
 
@@ -970,7 +1012,11 @@ with visuals_tab:
                 x_column,
                 y_column
             )
-            st.pyplot(fig)
+
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
 
     elif manual_graph_type == "Line Graph":
 
@@ -1002,8 +1048,12 @@ with visuals_tab:
                 x_column,
                 y_column
             )
-            st.pyplot(fig)
 
+            left, center, right = st.columns([1, 2, 1])
+
+            with center:
+                st.pyplot(fig)
+                
 with cleaned_tab:
     st.markdown(
         "<h2 style='text-align: center;'>Cleaned Dataset</h2>",

@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def histogram(df, column):
-    fig, ax = plt.subplots()
-
+    fig, ax = plt.subplots(figsize=(6, 4))
+    
     ax.hist(df[column].dropna())
 
     ax.set_title(f"Distribution of {column}")
@@ -14,7 +14,7 @@ def histogram(df, column):
     return fig
 
 def scatterplot(df, x_column, y_column):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 4))
 
     ax.scatter(df[x_column], df[y_column])
 
@@ -25,7 +25,7 @@ def scatterplot(df, x_column, y_column):
     return fig
 
 def bar_graph(df, column):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 4))
 
     df[column].value_counts().plot(kind="bar", ax=ax)
 
@@ -36,7 +36,7 @@ def bar_graph(df, column):
     return fig
 
 def box_plot(df, column):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 4))
 
     ax.boxplot(df[column].dropna())
 
@@ -46,7 +46,7 @@ def box_plot(df, column):
     return fig
 
 def line_plot(df, x_column, y_column):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 4))
 
     ax.plot(df[x_column], df[y_column])
 
