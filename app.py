@@ -62,16 +62,22 @@ with overview_tab:
     overview = scanner.data_overview(original_df)
     stat_results = stats.stat_overview(original_df)
     
-    st.subheader("Dimensions")
+    left, center, right = st.columns([2, 1, 2])
 
-    col1, col2 = st.columns(2)
+    with center:
+        st.markdown(
+            "<h3 style='text-align: center;'>Dimensions</h3>",
+            unsafe_allow_html=True
+        )
 
-    with col1:
-        st.metric("Rows", overview["dimensions"]["rows"])
+        col1, spacer, col2 = st.columns([6, 20, 6])
 
-    with col2:
-        st.metric("Columns", overview["dimensions"]["columns"])
+        with col1:
+            st.metric("Rows", overview["dimensions"]["rows"])
 
+        with col2:
+            st.metric("Columns", overview["dimensions"]["columns"])
+    
     st.subheader("Column Info")
     st.dataframe(overview["column_info"])
 
@@ -397,11 +403,7 @@ with problems_tab:
                     )
 
                     st.write("Potential outlier values:")
-                    st.write(
-                        st.session_state.current_df[
-                            ["_original_row", column]
-                        ]
-                    )
+
                     st.dataframe(
                         pd.DataFrame({
                             "CSV Row": info["outlier_rows"],
@@ -576,7 +578,7 @@ with problems_tab:
 
                         new_value = st.text_input(
                             "Replace with",
-                            value=old_value,
+                            value=old_value.strip(),
                             key=f"new_value_{column}"
                         )
 
@@ -591,12 +593,14 @@ with problems_tab:
                                 (before[column] == old_value).sum()
                             )
 
+                            cleaned_value = new_value.strip()
+
                             # call capitalization function
                             st.session_state.current_df = (
                                 cleaning.standardize_capitalization(
                                     before,
                                     column,
-                                    {old_value: new_value}
+                                    {old_value: cleaned_value}
                                 )
                             )
 
@@ -1025,9 +1029,12 @@ with cleaned_tab:
         )
 
     else:
-        st.info(
-            "No cleaning actions have been performed yet."
-        )
+        message_col, empty_col = st.columns([2, 1])
+
+        with message_col:
+            st.info(
+                "No cleaning actions have been performed yet."
+            )
 
     # show current dataset
     st.subheader("Current Dataset")
