@@ -45,17 +45,6 @@ def box_plot(df, column):
 
     return fig
 
-def line_plot(df, x_column, y_column):
-    fig, ax = plt.subplots(figsize=(6, 4))
-
-    ax.plot(df[x_column], df[y_column])
-
-    ax.set_title(f"{y_column} vs {x_column}")
-    ax.set_xlabel(x_column)
-    ax.set_ylabel(y_column)
-
-    return fig
-
 def recommend_visuals(df):
 
     recommendations = []
@@ -166,52 +155,6 @@ def recommend_visuals(df):
             )
         })
 
-    # list of words that suggest column has meaningful order
-    ordered_words = [
-        "date",
-        "time",
-        "year",
-        "month",
-        "day",
-        "age",
-        "hour",
-        "hours",
-        "distance",
-        "temperature",
-        "speed"
-    ]
-
-    ordered_columns = []
-
-    for column in df.columns:
-
-        column_name = column.lower()
-
-        if any(word in column_name for word in ordered_words):
-            ordered_columns.append(column)
-
-    for x in ordered_columns:
-
-        for y in numeric_columns:
-
-            # if same column SKIP
-            if x == y:
-                continue
-
-            # skip ID values
-            if "id" in x.lower():
-                continue
-
-            recommendations.append({
-                "type": "Line Graph",
-                "columns": [x, y],
-                "priority": 1,
-                "reason": (
-                    f"{x} appears to have a meaningful order, "
-                    f"so a line graph may possibly show how {y} changes "
-                    f"as {x} changes."
-                )
-            })
             
     # priority recommendation system
     recommendations.sort(

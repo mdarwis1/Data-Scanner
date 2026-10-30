@@ -54,7 +54,7 @@ Web application that takes a user uploaded CSV and analyzes the dataset for basi
 ### Visualizations
 
 - Recommends certain graphs based on current dataset
-- Offers scatterplot, histogram, box plot, bar graph, and line graph
+- Offers scatterplot, histogram, box plot, and bar graph
 - Prioritizes some recommendations higher based on a system of calculated correlations and categorical vs. numerical types
 - Has a manual graph feature where user can pick columns to create their own graph instead
 

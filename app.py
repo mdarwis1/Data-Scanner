@@ -11,6 +11,26 @@ from visualizations import charts
 # widens entire page
 st.set_page_config(layout="wide")
 
+# for auto scroll to graphs when generated
+def scroll_to_graph():
+    st.components.v1.html(
+        """
+        <script>
+            const graph = window.parent.document.getElementById(
+                "selected-graph"
+            );
+
+            if (graph) {
+                graph.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }
+        </script>
+        """,
+        height=0
+    )
+
 st.markdown(
     "<h1 style='text-align: center;'>Data Scanner</h1>",
     unsafe_allow_html=True
@@ -749,7 +769,6 @@ with visuals_tab:
         "Histogram": [],
         "Box Plot": [],
         "Bar Graph": [],
-        "Line Graph": []
     }
 
     for recommendation in recommendations_list:
@@ -830,6 +849,7 @@ with visuals_tab:
                         st.session_state.selected_visual = (
                             recommendation
                         )
+                        st.session_state.scroll_to_graph = True
 
                     st.divider()
 
@@ -857,7 +877,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
+
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
        # box plot
         elif graph_type == "Box Plot":
@@ -870,7 +898,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
+
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
         # scatterplot
         elif graph_type == "Scatterplot":
@@ -884,7 +920,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
+
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
         # bar graph
         elif graph_type == "Bar Graph":
@@ -897,21 +941,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
 
-        # line graph
-        elif graph_type == "Line Graph":
-
-            fig = charts.line_plot(
-                df,
-                columns[0],
-                columns[1]
-            )
-            
-            left, center, right = st.columns([1, 2, 1])
-
-            with center:
-                st.pyplot(fig)
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
     # for MANUALLY creating graphs
     st.divider()
@@ -939,7 +977,6 @@ with visuals_tab:
                 "Box Plot",
                 "Scatterplot",
                 "Bar Graph",
-                "Line Graph"
             ],
             key="manual_graph_type"
         )
@@ -967,7 +1004,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
+
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
     elif manual_graph_type == "Box Plot":
 
@@ -993,7 +1038,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
+
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
     elif manual_graph_type == "Bar Graph":
 
@@ -1019,7 +1072,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
+
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
 
     elif manual_graph_type == "Scatterplot":
 
@@ -1055,43 +1116,15 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
+                st.markdown(
+                    '<div id="selected-graph"></div>',
+                    unsafe_allow_html=True
+                )
                 st.pyplot(fig)
 
-    elif manual_graph_type == "Line Graph":
-
-        dropdown_col, empty_col = st.columns([2, 1])
-
-        with dropdown_col:
-            x_column = st.selectbox(
-                "X-axis",
-                all_columns,
-                key="manual_line_x"
-            )
-
-        dropdown_col, empty_col = st.columns([2, 1])
-
-        with dropdown_col:
-            y_column = st.selectbox(
-                "Y-axis",
-                numeric_columns,
-                key="manual_line_y"
-            )
-
-        if st.button(
-            "Create Line Graph",
-            key="create_line"
-        ):
-
-            fig = charts.line_plot(
-                df,
-                x_column,
-                y_column
-            )
-
-            left, center, right = st.columns([1, 2, 1])
-
-            with center:
-                st.pyplot(fig)
+                if st.session_state.get("scroll_to_graph", False):
+                    scroll_to_graph()
+                    st.session_state.scroll_to_graph = True
                 
 with cleaned_tab:
     st.markdown(
