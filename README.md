@@ -76,6 +76,7 @@ Web application that takes a user uploaded CSV and analyzes the dataset for basi
 ## What I Learned
 
 - Expanded knowledge of basic Python functions and methods
+- Learned more about data, data science, and manipulating data with Python
 - Working with Python libraries (Pandas, NumPy, and Matplotlib) at a more advanced level
 - Utilizing dictionary organization for storing information
 - Using Streamlit for front end implementation of Python and UI
