@@ -1,5 +1,8 @@
 # Data Scanner
 
+## Link to App
+https://data-scanner.streamlit.app/
+
 ## Overview
 
 Web application that takes a user uploaded CSV and analyzes the dataset for basic statistics, potential problems that need to be cleaned, and appropriate visualization options. User is given recommendations for different methods to resolve dataset issues. Explanations are given to help user better understand how exactly data is getting modified to improve accuracy. While cleaning, the scanner tracks a history of dataset changes and displays a real-time CSV that can then be downloaded as a new, cleaned dataset.
