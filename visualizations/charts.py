@@ -98,7 +98,7 @@ def recommend_visuals(df):
             "priority": 1,
             "reason": (
                 f"Shows the spread of {column} "
-                "and can help identify potential outliers."
+                "and may possibly help identify potential outliers."
             )
         })
 
@@ -132,7 +132,7 @@ def recommend_visuals(df):
                     "reason": (
                         f"{x} and {y} have a strong "
                         f"correlation ({correlation:.2f}), "
-                        "so a scatterplot can show their relationship."
+                        "so a scatterplot may possibly show their relationship."
                     )
                 })
 
@@ -145,7 +145,7 @@ def recommend_visuals(df):
                     "reason": (
                         f"{x} and {y} have a moderate "
                         f"correlation ({correlation:.2f}), "
-                        "so a scatterplot may reveal a relationship."
+                        "so a scatterplot may possibly reveal a relationship."
                     )
                 })
 
@@ -208,7 +208,7 @@ def recommend_visuals(df):
                 "priority": 1,
                 "reason": (
                     f"{x} appears to have a meaningful order, "
-                    f"so a line graph can show how {y} changes "
+                    f"so a line graph may possibly show how {y} changes "
                     f"as {x} changes."
                 )
             })

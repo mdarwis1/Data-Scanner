@@ -32,18 +32,27 @@ with center:
 if uploaded_file is None:
     st.stop()
 
-df = pd.read_csv(uploaded_file)
-df["_original_row"] = range(2, len(df) + 2)
+# identify uploaded file
+file_id = uploaded_file.name + str(uploaded_file.getvalue())
 
-# states holding versions of dataset
-if "original_df" not in st.session_state:
+# check if new file uploaded
+if st.session_state.get("file_id") != file_id:
+
+    # reset dataset session state
+    st.session_state.file_id = file_id
+
+    df = pd.read_csv(uploaded_file)
+    df["_original_row"] = range(2, len(df) + 2)
+
     st.session_state.original_df = df.copy()
-
-if "current_df" not in st.session_state:
     st.session_state.current_df = df.copy()
-
-if "edit_history" not in st.session_state:
     st.session_state.edit_history = []
+
+    # reset selected visualization
+    st.session_state.pop("selected_visual", None)
+
+else:
+    df = st.session_state.current_df.copy()
 
 # always use current dataset to analyze
 df = st.session_state.current_df
