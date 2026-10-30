@@ -17,7 +17,18 @@ st.markdown(
 )
 
 st.markdown(
-    "<p style='text-align: center;'>Upload a CSV to get started!</p>",
+    """
+    <p style='text-align: center;'>
+        Upload a CSV to get started!
+    </p>
+    <p style='text-align: center;'>
+        Data Scanner detects potential issues in your dataset
+        and provides tools to clean and visualize your data.
+    </p>
+    <p style='text-align: center;'>
+        Your uploaded dataset is not permanently stored by Data Scanner.
+    </p>
+    """,
     unsafe_allow_html=True
 )
 
