@@ -4,7 +4,7 @@ from . import stats
 
 df = pd.read_csv('test_data/scanner_overview_test_2.csv')
 
-# Getting rows/columns of dataset
+# getting rows/columns of dataset
 def get_dimensions(df):
     rows, columns = df.shape
 
@@ -30,7 +30,7 @@ def get_missing(df):
     # double .sum() sums missing values in each column and then sums that values again for entire df
     missing_count = df.isna().sum().sum()
 
-    #multiplying rows x columns to get number of cells
+    # multiplying rows x columns to get number of cells
     total_cells = df.shape[0] * df.shape[1]
     missing_values_percent_calc = (missing_count/total_cells) * 100
     missing_values_percent = f"{missing_values_percent_calc:.2f}%"

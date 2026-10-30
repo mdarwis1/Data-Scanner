@@ -11,14 +11,19 @@ from visualizations import charts
 # widens entire page
 st.set_page_config(layout="wide")
 
+st.markdown(
+    "<h1 style='text-align: center;'>Data Scanner</h1>",
+    unsafe_allow_html=True
+)
 
-st.title("Data Scanner")
+st.markdown(
+    "<p style='text-align: center;'>Upload a CSV to get started!</p>",
+    unsafe_allow_html=True
+)
 
-st.write("Upload a CSV to get started!")
+left, center, right = st.columns([1, 2, 1])
 
-col1, col2 = st.columns([1, 3])
-
-with col1:
+with center:
     uploaded_file = st.file_uploader(
         "Upload a CSV",
         type="csv"
@@ -55,6 +60,28 @@ def record_edit(action, column=None, method=None,
         "Rows Removed": rows_removed
     })
 
+# tab styling
+st.markdown("""
+    <style>
+    [role="tablist"][data-orientation="horizontal"] {
+        justify-content: center !important;
+        width: 100% !important;
+        gap: 35px !important;
+    }
+
+    [data-testid="stTab"] {
+        font-size: 18px !important;
+        padding: 12px 20px !important;
+        min-width: 140px !important;
+    }
+
+    [data-testid="stTab"] p {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # streamlit tabs
 overview_tab, problems_tab, visuals_tab, cleaned_tab = st.tabs(
     ["Overview", "Problems", "Visualizations", "Cleaned Dataset"]
@@ -80,7 +107,7 @@ with overview_tab:
             unsafe_allow_html=True
         )
 
-        col1, spacer, col2 = st.columns([10, 20, 10])
+        col1, spacer, col2 = st.columns([20, 20, 20])
 
         with col1:
             st.metric("Rows", overview["dimensions"]["rows"])
@@ -143,6 +170,7 @@ with problems_tab:
                 ):
                     st.write(f"**Type:** {info['type']}")
                     st.write(f"**Recommendation:** {info['recommendation']}")
+                    st.caption(info["explanation"])
 
                     st.write("Affected rows:")
                     st.dataframe(
@@ -411,6 +439,7 @@ with problems_tab:
                     st.write(
                         f"**Recommendation:** {info['recommendation']}"
                     )
+                    st.caption(info["explanation"])
 
                     st.write("Potential outlier values:")
 
@@ -697,10 +726,11 @@ with visuals_tab:
         "<h2 style='text-align: center;'>Recommended Visualizations</h2>",
         unsafe_allow_html=True
     )
-    st.write(
-        "Data Scanner analyzed your dataset and recommends "
-        "visualizations that may help you understand your data."
-    )
+    st.markdown(
+        "<h6 style='text-align: center;'>Data Scanner analyzed your current dataset and recommends "
+        "visualizations that may help you understand your data.</h6>",
+        unsafe_allow_html=True
+        )
 
     recommendations_list = charts.recommend_visuals(df)
 
@@ -1059,9 +1089,9 @@ with cleaned_tab:
         "<h2 style='text-align: center;'>Cleaned Dataset</h2>",
         unsafe_allow_html=True
     )
-    st.write(
-        "Review the changes you have made and "
-        "download your cleaned data."
+    st.markdown(
+            "<h6 style='text-align: center;'>Review the changes you have made and download your cleaned data.</h6>",
+            unsafe_allow_html=True
     )
 
     # show edit history

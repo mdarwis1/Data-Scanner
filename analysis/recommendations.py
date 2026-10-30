@@ -66,11 +66,18 @@ def outlier_recommendations(df):
                 "and consider removing or changing them."
             )
 
+        explanation = (
+            "Outliers are values that fall unusually far from the rest "
+            "of the data, meaning they are much higher or lower than majority of datapoints."
+            " They can skew statistical measures, such as the mean, which could affect analysis."
+        )
+
         outlier_recs[column] = {
             "outlier_count": outlier_count,
             "outlier_values": info["outlier_values"],
             "outlier_rows": info["outlier_rows"],
-            "recommendation": recommendation
+            "recommendation": recommendation,
+            "explanation": explanation
         }
 
     return outlier_recs
@@ -121,21 +128,46 @@ def missing_value_recommendations(df):
                 # if outliers, use median
                 if column in outliers:
                     recommendation = "Fill with median"
+
+                    explanation = (
+                        "This column is skewed and/or has outliers. The median is less "
+                        "affected by extreme values than the mean, making it a more reliable "
+                        "measure of center and estimate for missing values."
+                    )
+
                 elif abs(skewness) <= 0.5:
                     recommendation = "Fill with mean"
+
+                    explanation = (
+                        "This column has a relatively even distribution of data."
+                        "The mean will be a reliable measure of center and estimate for missing "
+                        "values because the data is not heavily skewed."
+                    )   
+
                 else:
                     recommendation = "Fill with median"
+
+                    explanation = (
+                        "This column is skewed and/or has outliers. The median is less "
+                        "affected by extreme values than the mean, making it a more reliable "
+                        "measure of center and estimate for missing values."
+                    )
 
                 total_missing[column] = {
                     "missing_count": int(missing_count),
                     "type": "numerical",
-                    "recommendation": recommendation
+                    "recommendation": recommendation,
+                    "explanation": explanation
                 }
             else:
                 total_missing[column] = {
                     "missing_count": int(missing_count),
                     "type": "categorical",
-                    'recommendation': "Fill with 'Unknown'"
+                    'recommendation': "Fill with 'Unknown'",
+                    "explanation": (
+                        "Filling missing categorical data with 'Unknown' preserves "
+                        "the rows while identifying values that were unavailable."
+                    )
                 }
 
     return total_missing
