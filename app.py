@@ -773,73 +773,59 @@ with visuals_tab:
             )
 
     # show graph groups
-    for graph_type, group in graph_groups.items():
 
-    # don't display empty graph categories
-        if not group:
-            continue
+    # only include graph types that have recommendations
+    available_groups = {
+        graph_type: group
+        for graph_type, group in graph_groups.items()
+        if group
+    }
 
-        # narrow visualization expanders
-        expander_col, empty_col = st.columns([2, 1])
+    if available_groups:
 
-        with expander_col:
-            with st.expander(
-                f"{graph_type} ({len(group)})"
-            ):
-                
-                # loop through recommendations
+        # create horizontal tabs
+        graph_tabs = st.tabs([
+            f"{graph_type} ({len(group)})"
+            for graph_type, group in available_groups.items()
+        ])
+
+        for tab, (graph_type, group) in zip(
+            graph_tabs, available_groups.items()
+        ):
+
+            with tab:
+
                 for i, recommendation in enumerate(group):
 
                     columns = recommendation["columns"]
-
                     reason = recommendation["reason"]
-
                     priority = recommendation["priority"]
 
-                    # column name
                     st.subheader(
                         " vs ".join(columns)
                         if len(columns) > 1
                         else columns[0]
                     )
 
-                # priority ranking system
                     if priority == 3:
-
-                        st.write(
-                            "⭐ **High Priority**"
-                        )
+                        st.write("⭐ **High Priority**")
                     elif priority == 2:
-
-                        st.write(
-                            "**Recommended**"
-                        )
+                        st.write("**Recommended**")
                     else:
-                        st.write(
-                            "**Optional**"
-                        )
+                        st.write("**Optional**")
 
-                    # reasoning/explanation
-                    st.write(
-                        f"**Why:** {reason}"
-                    )
+                    st.write(f"**Why:** {reason}")
 
-                    # correlation
                     if "correlation" in recommendation:
-
                         st.write(
-                            f"**Correlation:** "
-                            f"{recommendation['correlation']}"
+                            f"**Correlation:** {recommendation['correlation']}"
                         )
 
-                # button in each
                     if st.button(
                         f"Use {graph_type}",
                         key=f"{graph_type}_{i}"
                     ):
-                        st.session_state.selected_visual = (
-                            recommendation
-                        )
+                        st.session_state.selected_visual = recommendation
 
                     st.divider()
 
@@ -896,7 +882,7 @@ with visuals_tab:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
-              
+                
                 st.pyplot(fig)
 
         # bar graph
