@@ -628,56 +628,78 @@ with problems_tab:
                         .tolist()
                     )
 
-                    if values:
-                        old_value = st.selectbox(
-                            "Value to replace",
-                            values,
-                            key=f"old_value_{column}"
-                        )
+                    # group values that differ only by capitalization
+                    capitalization_groups = {}
 
-                        new_value = st.text_input(
-                            "Replace with",
-                            value=old_value.strip(),
-                            key=f"new_value_{column}"
-                        )
+                    for value in values:
+                        key = value.lower()
 
-                        if st.button(
-                            f"Replace value in {column}",
-                            key=f"replace_value_{column}"
-                        ):
-                            before = st.session_state.current_df.copy()
+                        if key not in capitalization_groups:
+                            capitalization_groups[key] = []
 
-                            # count matching cells before replacement
-                            cells_changed = int(
-                                (before[column] == old_value).sum()
-                            )
+                        capitalization_groups[key].append(value)
 
-                            cleaned_value = new_value.strip()
+                    # only show groups w capitalization diffs
+                    capitalization_groups = {
+                        key: group
+                        for key, group in capitalization_groups.items()
+                        if len(group) > 1
+                    }
 
-                            # call capitalization function
-                            st.session_state.current_df = (
-                                cleaning.standardize_capitalization(
-                                    before,
-                                    column,
-                                    {old_value: cleaned_value}
-                                )
-                            )
+                    if capitalization_groups:
 
-                            if old_value != new_value and cells_changed > 0:
-                                record_edit(
-                                    action="Fix formatting",
-                                    column=column,
-                                    method=f"{old_value} → {new_value}",
-                                    cells_changed=cells_changed
+                        for group, variations in capitalization_groups.items():
+
+                            with st.expander(
+                                f"{variations[0].capitalize()} — {len(variations)} variations"
+                            ):
+
+                                st.write("Values found:", variations)
+
+                                new_value = st.text_input(
+                                    "Standardize as:",
+                                    value=variations[0].capitalize(),
+                                    key=f"capitalization_{column}_{group}"
                                 )
 
-                            st.rerun()
+                                if st.button(
+                                    "Apply Fix",
+                                    key=f"capitalize_{column}_{group}"
+                                ):
 
-    else:
-        left, right = st.columns([1,3])
-        
-        with left:
-            st.success("No formatting issues detected.")
+                                    before = st.session_state.current_df.copy()
+
+                                    mapping = {
+                                        value: new_value.strip()
+                                        for value in variations
+                                    }
+
+                                    cells_changed = int(
+                                        before[column].isin(variations).sum()
+                                    )
+
+                                    st.session_state.current_df = (
+                                        cleaning.standardize_capitalization(
+                                            before,
+                                            column,
+                                            mapping
+                                        )
+                                    )
+
+                                    if cells_changed > 0:
+                                        record_edit(
+                                            action="Fix formatting",
+                                            column=column,
+                                            method=f"Standardize capitalization: {group}",
+                                            cells_changed=cells_changed
+                                        )
+
+                                    st.rerun()
+                    else:
+                        left, right = st.columns([1, 3])
+
+                        with left:
+                            st.success("No capitalization differences detected.")
     
     # duplicates
     duplicates = recommendations.duplicate_recommendations(df)
